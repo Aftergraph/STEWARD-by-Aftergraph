@@ -70,7 +70,6 @@ class RuntimeDispatchRequest:
     budget_ceiling: int
     checkpoint_id: str
     evidence_root: str
-    verification_subject: str
     causal_id: str
 
     def to_runtime_wire(self) -> dict[str, Any]:
@@ -96,7 +95,6 @@ class RuntimeDispatchRequest:
             "budgetCeiling": self.budget_ceiling,
             "checkpointId": self.checkpoint_id,
             "evidenceRoot": self.evidence_root,
-            "verificationSubject": self.verification_subject,
             "causalId": self.causal_id,
         }
 
@@ -180,7 +178,6 @@ class RuntimeDispatchV2Request:
             ("budget_ref", self.budget_ref),
             ("checkpoint_id", self.checkpoint_id),
             ("evidence_root", self.evidence_root),
-            ("verification_subject", self.verification_subject),
             ("causal_id", self.causal_id),
         ):
             if not isinstance(value, str) or not value.strip():

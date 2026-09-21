@@ -32,7 +32,6 @@ def request():
         budget_ceiling=100,
         checkpoint_id="checkpoint/1",
         evidence_root="evidence/1",
-        verification_subject="git:Aftergraph/STEWARD-by-Aftergraph@" + "b" * 40,
         causal_id="causal/1",
     )
 
@@ -65,6 +64,7 @@ class RuntimeV2PortTests(unittest.TestCase):
         self.assertNotIn("executionContextId", wire)
         self.assertNotIn("traceId", wire)
         self.assertNotIn("workerId", wire)
+        self.assertNotIn("verificationSubject", wire)
         self.assertEqual("auth_" + "5" * 32, wire["authorityLeaseId"])
         self.assertEqual("lse_" + "6" * 32, wire["workerLeaseId"])
 

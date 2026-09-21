@@ -12,6 +12,11 @@ from .runtime import (
     RuntimeUnavailableError,
     SubprocessRuntimeTransport,
 )
+from .runtime_subject import (
+    RuntimeSubjectBindingRequest,
+    RuntimeSubjectBindingReceipt,
+    RuntimeSubjectBindingPort,
+)
 from .trust_gateway import (
     TrustGatewayActionRequest,
     TrustGatewayActionReceipt,
@@ -48,6 +53,9 @@ __all__ = [
     "RuntimeRejectedError",
     "RuntimeUnavailableError",
     "SubprocessRuntimeTransport",
+    "RuntimeSubjectBindingRequest",
+    "RuntimeSubjectBindingReceipt",
+    "RuntimeSubjectBindingPort",
     "TrustGatewayActionRequest",
     "TrustGatewayActionReceipt",
     "TrustGatewayApprovalRequired",

@@ -59,3 +59,26 @@ rebinding or malformed correlation.
 
 The old RuntimePort remains compatibility code only; P2 evidence must use the
 V2 port.
+
+
+## Post-effect exact-subject binding
+
+The final coding verification subject is no longer accepted on the initial V2
+dispatch request. A candidate commit cannot be known before the governed Git
+effect creates it.
+
+After the candidate SHA is observed, STEWARD uses
+`RuntimeSubjectBindingPort` with Runtime's
+`runtime-steward-bind-subject-v2` bridge. The subject must be
+`git:<owner>/<repo>@<40hex>`; branch/base/placeholder subjects fail before
+transport. Runtime then binds the subject durably in WORKS.
+
+This keeps the sequence honest:
+
+```text
+dispatch accepted
+→ TG/AIE authorized effect
+→ candidate SHA observed
+→ Runtime/WORKS subject bind
+→ Sentinel exact-subject verification
+```
