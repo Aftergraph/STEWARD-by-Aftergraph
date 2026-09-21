@@ -60,6 +60,10 @@ Start with:
 python scripts/validate_repo.py
 ```
 
+## License
+
+MIT — see [LICENSE](LICENSE).
+
 ## Research posture
 
 This repository is an implementation/specification seed, not evidence of novelty. Claims about novelty or superiority require the Aftergraph research protocol, prior-art review, reproducible experiments, cost/performance accounting, and independent verification.
