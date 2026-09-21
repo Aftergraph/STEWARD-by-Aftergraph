@@ -33,6 +33,14 @@ from .sentinel import (
     SentinelContractError,
     SentinelUnavailableError,
 )
+from .golden_mission_acceptance import (
+    GoldenMissionIdentity,
+    GoldenMissionAcceptanceRequest,
+    GoldenMissionAcceptanceReceipt,
+    GoldenMissionAcceptancePort,
+    GoldenMissionAcceptanceContractError,
+    GoldenMissionAcceptanceUnavailable,
+)
 from .git_subject import (
     GitWorktreeRequest,
     GitWorktreeBinding,
@@ -68,6 +76,12 @@ __all__ = [
     "SentinelPort",
     "SentinelContractError",
     "SentinelUnavailableError",
+    "GoldenMissionIdentity",
+    "GoldenMissionAcceptanceRequest",
+    "GoldenMissionAcceptanceReceipt",
+    "GoldenMissionAcceptancePort",
+    "GoldenMissionAcceptanceContractError",
+    "GoldenMissionAcceptanceUnavailable",
     "GitWorktreeRequest",
     "GitWorktreeBinding",
     "GitCandidateSubject",
