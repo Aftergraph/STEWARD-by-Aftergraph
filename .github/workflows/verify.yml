@@ -19,3 +19,30 @@ jobs:
           python-version: "3.12"
       - run: python -m pip install --disable-pip-version-check --no-input -r requirements-dev.txt
       - run: PYTHONPATH=src python -m unittest discover -s tests -v
+
+  works-local-write:
+    name: WORKS local write/readback proof
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout STEWARD
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          clean: true
+      - name: Checkout exact WORKS owner head
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: Aftergraph/works-execution
+          ref: 64cabe65bf210b2c65b525750acb45fc6d53894d
+          path: .p2/works-execution
+          persist-credentials: false
+          clean: true
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: "1.25"
+          cache: false
+      - name: Execute isolated owner-backed writes
+        env:
+          WORKS_EXPECTED_HEAD: 64cabe65bf210b2c65b525750acb45fc6d53894d
+        run: bash scripts/p2_works_local_write_proof.sh "$GITHUB_WORKSPACE/.p2/works-execution" "$WORKS_EXPECTED_HEAD"
