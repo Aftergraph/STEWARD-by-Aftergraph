@@ -33,7 +33,7 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           repository: Aftergraph/works-execution
-          ref: b8016384a3ffd99acb9834676180811fabb6a12e
+          ref: 64cabe65bf210b2c65b525750acb45fc6d53894d
           path: .p2/works-execution
           persist-credentials: false
           clean: true
@@ -43,5 +43,5 @@ jobs:
           cache: false
       - name: Execute isolated owner-backed writes
         env:
-          WORKS_EXPECTED_HEAD: b8016384a3ffd99acb9834676180811fabb6a12e
+          WORKS_EXPECTED_HEAD: 64cabe65bf210b2c65b525750acb45fc6d53894d
         run: bash scripts/p2_works_local_write_proof.sh "$GITHUB_WORKSPACE/.p2/works-execution" "$WORKS_EXPECTED_HEAD"
