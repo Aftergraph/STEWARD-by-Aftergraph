@@ -52,6 +52,7 @@ Start with:
 4. `docs/03-COMPONENT-OWNERSHIP.md`
 5. `docs/04-INFRASTRUCTURE-TOPOLOGY.md`
 6. `docs/14-IMPLEMENTATION-PLAN.md`
+7. `docs/18-PRESENCE-PROJECTION.md`
 
 ## Validation
 

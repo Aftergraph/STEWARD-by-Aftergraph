@@ -1,0 +1,200 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aftergraph.org/schemas/steward-presence-projection-1.0.json",
+  "title": "STEWARD Presence Projection 1.0",
+  "description": "Presentation-only projection of externally owned system state. It never grants authority, creates execution truth, or establishes verification truth.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "projection_id",
+    "subject",
+    "displayed_state",
+    "semantic_source",
+    "claim_class",
+    "canonical_truth",
+    "authority_effect",
+    "verification_effect",
+    "generated_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "steward.presence-projection/1.0"
+    },
+    "projection_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "mission",
+            "work",
+            "attempt",
+            "action",
+            "effect",
+            "verification"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "exact_subject_sha": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40,64}$"
+        }
+      }
+    },
+    "displayed_state": {
+      "enum": [
+        "idle",
+        "thinking",
+        "planning",
+        "executing",
+        "inspecting",
+        "waiting",
+        "blocked",
+        "approval",
+        "verifying",
+        "approving",
+        "succeeded",
+        "failed"
+      ]
+    },
+    "semantic_source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "kind",
+        "source_id"
+      ],
+      "properties": {
+        "owner": {
+          "enum": [
+            "steward",
+            "aie",
+            "trust-gateway",
+            "works-execution",
+            "runtime",
+            "sentinel"
+          ]
+        },
+        "kind": {
+          "enum": [
+            "projection-local",
+            "authority-state",
+            "policy-state",
+            "work-state",
+            "runtime-state",
+            "verification-verdict"
+          ]
+        },
+        "source_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidence_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "verification_verdict_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "observed_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "claim_class": {
+      "const": "projection-only"
+    },
+    "canonical_truth": {
+      "const": false
+    },
+    "authority_effect": {
+      "const": false
+    },
+    "verification_effect": {
+      "const": false
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "stale_after": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reduced_motion_state": {
+      "enum": [
+        "static-final-pose",
+        "static-labeled-state"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "displayed_state": {
+            "const": "succeeded"
+          }
+        },
+        "required": [
+          "displayed_state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "semantic_source": {
+            "properties": {
+              "kind": {
+                "const": "verification-verdict"
+              }
+            },
+            "required": [
+              "verification_verdict_id"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "displayed_state": {
+            "const": "verifying"
+          }
+        },
+        "required": [
+          "displayed_state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "semantic_source": {
+            "properties": {
+              "owner": {
+                "const": "sentinel"
+              },
+              "kind": {
+                "const": "verification-verdict"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

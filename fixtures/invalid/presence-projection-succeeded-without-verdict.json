@@ -1,0 +1,19 @@
+{
+  "schema_version": "steward.presence-projection/1.0",
+  "projection_id": "presence_invalid_success",
+  "subject": {
+    "kind": "work",
+    "id": "work:demo:001"
+  },
+  "displayed_state": "succeeded",
+  "semantic_source": {
+    "owner": "works-execution",
+    "kind": "work-state",
+    "source_id": "work:demo:001"
+  },
+  "claim_class": "projection-only",
+  "canonical_truth": false,
+  "authority_effect": false,
+  "verification_effect": false,
+  "generated_at": "2026-09-21T17:00:01Z"
+}

@@ -1,0 +1,25 @@
+{
+  "schema_version": "steward.presence-projection/1.0",
+  "projection_id": "presence_demo_verified_001",
+  "subject": {
+    "kind": "verification",
+    "id": "verification:demo:001",
+    "exact_subject_sha": "0123456789abcdef0123456789abcdef01234567"
+  },
+  "displayed_state": "succeeded",
+  "semantic_source": {
+    "owner": "sentinel",
+    "kind": "verification-verdict",
+    "source_id": "sentinel:verdict:001",
+    "evidence_ref": "evidence:demo:001",
+    "verification_verdict_id": "verdict:001",
+    "observed_at": "2026-09-21T17:00:00Z"
+  },
+  "claim_class": "projection-only",
+  "canonical_truth": false,
+  "authority_effect": false,
+  "verification_effect": false,
+  "generated_at": "2026-09-21T17:00:01Z",
+  "stale_after": "2026-09-21T17:00:31Z",
+  "reduced_motion_state": "static-labeled-state"
+}
