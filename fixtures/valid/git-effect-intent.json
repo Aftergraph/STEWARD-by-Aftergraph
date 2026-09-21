@@ -1,0 +1,12 @@
+{
+  "effectId": "effect-git-001",
+  "missionRef": "mission-001",
+  "workRef": "work-001",
+  "repositoryRef": "repo-steward",
+  "operation": "push",
+  "sourceRef": "refs/heads/feat/p1",
+  "targetRef": "refs/heads/feat/p1",
+  "subjectCommit": "abcdef0123456789abcdef0123456789abcdef01",
+  "idempotencyKey": "mission-001:push:abcdef0",
+  "authorityRef": "authority-001"
+}

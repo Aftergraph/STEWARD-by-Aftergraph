@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aftergraph.steward.repository-ref.v0.1",
+  "title": "RepositoryRef",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "repositoryId",
+    "provider",
+    "owner",
+    "name",
+    "defaultBranch"
+  ],
+  "properties": {
+    "repositoryId": {
+      "type": "string"
+    },
+    "provider": {
+      "enum": [
+        "github",
+        "gitlab",
+        "other"
+      ]
+    },
+    "owner": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "defaultBranch": {
+      "type": "string"
+    },
+    "remoteUrl": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "visibility": {
+      "enum": [
+        "public",
+        "private",
+        "internal",
+        null
+      ]
+    }
+  }
+}

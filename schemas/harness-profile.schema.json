@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aftergraph.steward.harness-profile.v0.1",
+  "title": "HarnessProfile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "profileId",
+    "agentLoop",
+    "toolUse",
+    "observationManagement",
+    "contextManagement",
+    "completionDetection"
+  ],
+  "properties": {
+    "profileId": {
+      "type": "string"
+    },
+    "guides": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "agentLoop": {
+      "type": "object"
+    },
+    "toolUse": {
+      "type": "object"
+    },
+    "observationManagement": {
+      "type": "object"
+    },
+    "contextManagement": {
+      "type": "object"
+    },
+    "completionDetection": {
+      "type": "object"
+    },
+    "recovery": {
+      "type": "object"
+    },
+    "sensors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "budgets": {
+      "type": "object"
+    }
+  }
+}

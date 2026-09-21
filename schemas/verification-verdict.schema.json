@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aftergraph.steward.verification-verdict.v0.1",
+  "title": "VerificationVerdictRef",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "verdictId",
+    "subjectRef",
+    "verifierRef",
+    "verdict",
+    "evidenceRefs"
+  ],
+  "properties": {
+    "verdictId": {
+      "type": "string"
+    },
+    "subjectRef": {
+      "type": "string",
+      "minLength": 1
+    },
+    "verifierRef": {
+      "type": "string"
+    },
+    "verdict": {
+      "enum": [
+        "PASS",
+        "FAIL",
+        "INCONCLUSIVE",
+        "STALE"
+      ]
+    },
+    "evidenceRefs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "issuedAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    }
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aftergraph.steward.work-claim.v0.1",
+  "title": "WorkClaim",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "claimId",
+    "missionRef",
+    "nodeRef",
+    "agentRef",
+    "scope",
+    "mode",
+    "state"
+  ],
+  "properties": {
+    "claimId": {
+      "type": "string"
+    },
+    "missionRef": {
+      "type": "string"
+    },
+    "nodeRef": {
+      "type": "string"
+    },
+    "agentRef": {
+      "type": "string"
+    },
+    "scope": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "mode": {
+      "enum": [
+        "read",
+        "write",
+        "effect",
+        "review"
+      ]
+    },
+    "state": {
+      "enum": [
+        "PROPOSED",
+        "RESERVED",
+        "ACTIVE",
+        "HANDOFF",
+        "RELEASED",
+        "EXPIRED",
+        "REVOKED"
+      ]
+    },
+    "leaseRef": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "graphVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "expiresAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    }
+  }
+}

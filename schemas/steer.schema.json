@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aftergraph.steward.steer.v0.1",
+  "title": "SteerEvent",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "missionRef",
+    "source",
+    "kind",
+    "payload"
+  ],
+  "properties": {
+    "missionRef": {
+      "type": "string"
+    },
+    "workRef": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "source": {
+      "enum": [
+        "human",
+        "policy",
+        "agent",
+        "system"
+      ]
+    },
+    "kind": {
+      "enum": [
+        "constraint",
+        "priority",
+        "correction",
+        "context",
+        "pause",
+        "resume",
+        "cancel",
+        "takeover"
+      ]
+    },
+    "payload": {},
+    "createdAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    }
+  }
+}

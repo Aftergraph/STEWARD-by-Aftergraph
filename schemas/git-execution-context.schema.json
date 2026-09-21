@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aftergraph.steward.git-execution-context.v0.1",
+  "title": "GitExecutionContext",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "repositoryRef",
+    "baseCommit",
+    "worktreeRef",
+    "startingHead",
+    "currentHead"
+  ],
+  "properties": {
+    "repositoryRef": {
+      "type": "string"
+    },
+    "remoteRef": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "baseCommit": {
+      "type": "string",
+      "minLength": 7
+    },
+    "branchRef": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "worktreeRef": {
+      "type": "string"
+    },
+    "startingHead": {
+      "type": "string",
+      "minLength": 7
+    },
+    "currentHead": {
+      "type": "string",
+      "minLength": 7
+    },
+    "changeSetRef": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "commitRefs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 7
+      }
+    },
+    "pullRequestRef": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "expectedMergeBase": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

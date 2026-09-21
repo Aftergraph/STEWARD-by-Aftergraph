@@ -1,0 +1,8 @@
+{
+  "effectId": "effect-git-bad",
+  "missionRef": "mission-001",
+  "workRef": "work-001",
+  "repositoryRef": "repo-steward",
+  "operation": "merge",
+  "idempotencyKey": "bad-merge"
+}
