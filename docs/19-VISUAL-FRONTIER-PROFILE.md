@@ -1,4 +1,4 @@
-# STEWARD Visual Frontier Profile v1.1
+# STEWARD Visual Frontier Profile v1.2
 
 ## Purpose
 
@@ -68,6 +68,27 @@ A semantic state added or removed from PresenceProjection therefore requires the
 
 The static renders remain fallbacks/presentation assets. They never become canonical state.
 
+## Compact presence
+
+Compact presence is not a second character system. It is a crop of the same revision-5 `STEWARD_Rig` for chat, cards, mobile and status rows.
+
+Contract:
+
+- schema: `steward.compact-presence-assets/1.0`
+- manifest: `/assets/compact-presence/manifest-v1.json`
+- source scene revision: `5`
+- website source commit: `04b075c2ba609c08e8a39ca1936badc3c6153911`
+- states: `idle · verifying · succeeded`
+- proportion profile: `frontier-proportions/1.0`
+- material profile: `frontier-material/1.1`
+- geometry changed for compact crops: **false**
+
+The three compact states are a strict subset of `PresenceProjection/1.0`. They must remain the same entity and may differ only through pose, restrained semantic signal and crop. Compact avatars never create a separate role identity.
+
+The former website treatment mixed role and state semantics by presenting `Guide / Sentinel / Verified` as equivalent avatar categories. Revision 5 removes that ambiguity: compact presence is explicitly state-derived.
+
+The website compact-presence section passed desktop and mobile browser QA with no page or console errors before source commit `04b075c2ba609c08e8a39ca1936badc3c6153911`.
+
 ## Material and signal hierarchy
 
 | Role | Rendering intent |
@@ -133,7 +154,7 @@ Before push of source commit `a25fa626979b3f938e9cec232cbaef52771e9db3`:
 - desktop WebGL: PASS
 - mobile + reduced motion: PASS
 - forced GLB failure → rev5 idle fallback: PASS
-- normal browser console/page errors: 0
+- normal browser console/page errors: 0\n- compact presence asset SHA integrity: PASS\n- compact presence desktop/mobile browser QA: PASS
 
 ## Current delivery observation
 
