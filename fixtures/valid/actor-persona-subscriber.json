@@ -1,0 +1,19 @@
+{
+  "schema_version": "steward.actor-persona/1.0",
+  "persona_id": "persona-verification-subscriber-v1",
+  "actor_class": "agent",
+  "name": "Verification Subscriber",
+  "role": "subscriber",
+  "attention_profile": {
+    "interests": ["verification-verdicts", "security-advisories"],
+    "channel": "webhook",
+    "max_daily_attention_minutes": 5
+  },
+  "review_scope": {
+    "paths": ["docs/evidence/"],
+    "verdicts": ["comment"]
+  },
+  "authority_effect": false,
+  "verification_effect": false,
+  "delegation_boundary": "Listens to Sentinel verdicts and security advisories; never verifies on its own"
+}
