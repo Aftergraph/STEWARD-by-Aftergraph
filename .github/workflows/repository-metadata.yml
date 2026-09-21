@@ -8,7 +8,10 @@ on:
 
 permissions:
   contents: read
-  administration: write
+  # 'administration' is not a valid GITHUB_TOKEN permission key (caused 422 on every run).
+  # Repo-settings PATCH requires a PAT stored as a repository secret.
+  # The apply steps below use secrets.REPO_ADMIN_PAT when available,
+  # falling back to github.token (which will 403 on PATCH — schema validation still runs).
 
 concurrency:
   group: repository-metadata
@@ -57,7 +60,7 @@ jobs:
               print(f'DESCRIPTION_FEATURES=APPLIED status={r.status}')
           PY
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.REPO_ADMIN_PAT || github.token }}
 
       - name: Apply topics
         run: |
@@ -75,7 +78,7 @@ jobs:
               print(f'TOPICS=APPLIED status={r.status}')
           PY
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.REPO_ADMIN_PAT || github.token }}
 
       - name: Apply homepage fail-closed
         run: |
@@ -109,4 +112,4 @@ jobs:
               print(f'HOMEPAGE=APPLIED status={r.status}')
           PY
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.REPO_ADMIN_PAT || github.token }}
