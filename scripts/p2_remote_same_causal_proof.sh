@@ -150,11 +150,21 @@ function run(command, argv = [], options = {}) {
 }
 
 function sentinelReview() {
-  const out = run('node', [
+  const out = spawnSync('node', [
     path.join(sentinelRoot, 'bin', 'sentinel.js'),
     'review', '--pr', targetPR, '--repo', targetRepo,
     '--format', 'json', '--no-ledger',
-  ]);
+  ], {
+    encoding: 'utf8',
+    env: process.env,
+    maxBuffer: 2 * 1024 * 1024,
+  });
+  if (out.status !== 0 && out.status !== 1) {
+    throw new Error(
+      'sentinel review failed status=' + out.status +
+      ' stdout=' + out.stdout + ' stderr=' + out.stderr
+    );
+  }
   return JSON.parse(out.stdout);
 }
 
