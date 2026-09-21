@@ -1,0 +1,40 @@
+# works.yml — STEWARD P2 proof through the Aftergraph WORKS control plane.
+#
+# This is intentionally a staging verification path, not a deployment path.
+# It executes on the VDS avc-core pool and binds all cross-repo inputs to
+# exact owner SHAs. No production endpoint or credential is consumed.
+version: 1
+
+work:
+  p2-runtime-works-cross-process:
+    triggers:
+      - push
+      - pull_request
+
+    requirements:
+      confidence: development
+      os: linux
+      arch: amd64
+      pool: avc-core
+
+    nodes:
+      proof:
+        run: |
+          set -euo pipefail
+          command -v git
+          command -v go
+          command -v node
+          command -v corepack
+
+          root="$(mktemp -d)"
+          trap 'rm -rf "$root"' EXIT
+
+          git clone -q https://github.com/Aftergraph/runtime.git "$root/runtime"
+          git -C "$root/runtime" checkout -q d9c5efb3a74222326ec71b06d5c2df2d4215d68f
+
+          git clone -q https://github.com/Aftergraph/works-execution.git "$root/works-execution"
+          git -C "$root/works-execution" checkout -q 64cabe65bf210b2c65b525750acb45fc6d53894d
+
+          bash scripts/p2_runtime_works_cross_process_proof.sh             "$root/runtime"             "$root/works-execution"             d9c5efb3a74222326ec71b06d5c2df2d4215d68f             64cabe65bf210b2c65b525750acb45fc6d53894d
+        cache: false
+        timeout_s: 1200
