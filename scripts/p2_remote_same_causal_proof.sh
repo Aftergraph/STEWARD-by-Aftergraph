@@ -127,4 +127,130 @@ const botName = 'worker';
 const tool = 'git.push';
 const ref = 'refs/heads/' + targetBranch;
 const args = { repository: targetRepo, ref, new_sha: shaB, force: true };
-const diges
+const digest = actionFingerprint({ bot: botName, tool, args });
+
+function py(script, argv = []) {
+  const out = spawnSync(process.env.AIE_PYTHON || 'python3', ['-c', script, ...argv], {
+    encoding: 'utf8', env: process.env, maxBuffer: 256 * 1024,
+  });
+  if (out.status !== 0) {
+    throw new Error('python helper failed status=' + out.status + ' stdout=' + out.stdout + ' stderr=' + out.stderr);
+  }
+  return (out.stdout || '').trim();
+}
+
+function run(command, argv = [], options = {}) {
+  const out = spawnSync(command, argv, {
+    encoding: 'utf8', env: process.env, maxBuffer: 2 * 1024 * 1024, ...options,
+  });
+  if (out.status !== 0) {
+    throw new Error(command + ' failed status=' + out.status + ' stdout=' + out.stdout + ' stderr=' + out.stderr);
+  }
+  return out;
+}
+
+function sentinelReview() {
+  const out = run('node', [
+    path.join(sentinelRoot, 'bin', 'sentinel.js'),
+    'review', '--pr', targetPR, '--repo', targetRepo,
+    '--format', 'json', '--no-ledger',
+  ]);
+  return JSON.parse(out.stdout);
+}
+
+const seed = [
+'import sys',
+'from datetime import datetime, timedelta, timezone',
+'from pathlib import Path',
+'aie_root, db_path, action_id, principal_id, mission_id, authority_id, digest, repo, ref = sys.argv[1:]',
+'sys.path.insert(0, str(Path(aie_root) / "src"))',
+'from aie_runtime.engine import ActionRequest, AdmissionEngine, AuthorityLease, Mission, Principal',
+'from aie_runtime.persistent_state import PersistentState',
+'now = datetime.now(timezone.utc)',
+'state = PersistentState(db_path=db_path)',
+'state.principals[principal_id] = Principal(principal_id, "agent", "ref:steward-remote-p2")',
+'state.missions[mission_id] = Mission(mission_id, "RUNNING")',
+'state.leases[authority_id] = AuthorityLease(id=authority_id, principal_id=principal_id, mission_id=mission_id, capabilities={"git.push"}, resource_prefixes=("repo:" + repo,), expires_at=now + timedelta(minutes=10), budget_remaining=10, revoked=False)',
+'engine = AdmissionEngine(state, policy=lambda _: True)',
+'engine.admit(ActionRequest(action_id, principal_id, mission_id, authority_id, "git.push", "repo:" + repo + "#" + ref, 1, extensions=({"namespace":"urn:aftergraph:tg-action:v1","sha256":digest},)))',
+'state.save_all()',
+'state._conn.close()',
+].join('\n');
+
+py(seed, [
+  aieRoot, stateFile, input.actionId, input.principalId, input.missionId,
+  input.authorityLeaseId, digest, targetRepo, ref,
+]);
+
+const pdrId = 'pdr_88888888888888888888888888888888';
+const deps = {
+  resolvePlatformIdentity: () => ({
+    status: 200,
+    body: {
+      organization_id: input.organizationId,
+      tenant_id: input.tenantId,
+      principal_id: input.principalId,
+    },
+  }),
+  createExecutionDecision: (record) => ({ id: pdrId, ...record }),
+};
+
+(async () => {
+  const sentinelA = sentinelReview();
+  assert.equal(sentinelA.review.headSha, shaA);
+
+  const allowed = await authorizeV21Action({
+    req: {},
+    gw: {},
+    body: {
+      action_id: input.actionId,
+      execution_context_id: input.executionContextId,
+      mission_id: input.missionId,
+    },
+    bot: { name: botName },
+    tool,
+    args,
+    deps,
+  });
+
+  assert.equal(allowed.legacy, false);
+  assert.equal(allowed.context.execution_context_id, input.executionContextId);
+  assert.equal(allowed.context.authority_lease_id, input.authorityLeaseId);
+  assert.equal(allowed.revalidation.action_id, input.actionId);
+  assert.equal(allowed.revalidation.authority_lease_id, input.authorityLeaseId);
+  assert.equal(allowed.pdr.id, pdrId);
+  assert.equal(allowed.correlation.ok, true);
+  assert.ok(['recorded', 'already_recorded'].includes(allowed.correlation.receipt.status));
+
+  const evidenceCount = Number(py(
+    "import sqlite3,sys; c=sqlite3.connect(sys.argv[1]); print(sum('action.revalidated' in r[0] for r in c.execute('SELECT data FROM evidence'))); c.close()",
+    [stateFile],
+  ));
+  assert.ok(evidenceCount >= 1);
+
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'steward-p2-remote-'));
+  const db = open(path.join(dir, 'gateway.db'));
+  try {
+    const vault = new SecretsVault({ db, enabled: true, master: 'p2-remote-proof-ephemeral-master' });
+    vault.setSecret(input.tenantId, 'github-proof-token', token);
+    const now = Date.now();
+    const store = new CredentialHandleStore({ db, vault, now: () => Date.now() });
+    const apiPath = '/repos/' + targetRepo + '/git/refs/heads/' + targetBranch;
+    const handle = store.issue({
+      tenant: input.tenantId,
+      secretKey: 'github-proof-token',
+      principalId: input.principalId,
+      missionId: input.missionId,
+      authorityRef: input.authorityLeaseId,
+      purpose: 'git_push',
+      credentialClass: 'github_actions_ephemeral_token',
+      allowedDestinations: ['api.github.com'],
+      allowedMethods: ['PATCH'],
+      allowedPathPrefixes: [apiPath],
+      scopeRefs: ['repo:' + targetRepo, 'ref:' + ref],
+      expiresAt: now + 5 * 60 * 1000,
+    });
+
+    const bridge = path.join(aieRoot, 'scripts', 'aie_revalidate_bridge.py');
+    function revalidate() {
+      con
