@@ -434,6 +434,7 @@ package api_test
 import (
 	"bytes"
 	"encoding/json"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -491,7 +492,7 @@ func TestStewardRemoteSameCausalP2(t *testing.T) {
 		t.Fatal("proof paths missing")
 	}
 
-	base, workID, leaseID := setupDispatchV2Work(t)
+	base, workID, leaseID := setupMissionAcceptanceV2(t)
 	dispatchReq := map[string]any{
 		"workId": workID,
 		"organizationId": "org_11111111111111111111111111111111",
@@ -708,6 +709,107 @@ print(json.dumps({"ready_for_owner_acceptance": True, "verification_subject": ou
 		t.Fatalf("missing readiness proof: %s", readyOut)
 	}
 
+	// Commit the terminal truth in the canonical WORKS owner on the same
+	// acceptance record. Platform and independent verifier credentials are
+	// distinct, and the owner re-reads the durable record before returning 200.
+	missionBody := map[string]any{
+		"schema":               "dispatch.mission-acceptance/1.0",
+		"execution_context_id": dispatch.Receipt.ExecutionContextID,
+		"execution_pdr_id":     proof.ExecutionPDRID,
+		"verifier_id":          "sentinel:exact-head",
+		"sentinel_head_sha":    proof.SentinelBHead,
+		"sentinel_verdict":     proof.SentinelBVerdict,
+		"sentinel_receipt_id":  proof.SentinelBReceiptID,
+	}
+	final := postMissionAcceptance(
+		t, base, workID, dispatch.Receipt.WorksExecutionID,
+		missionBody, missionAcceptanceVerifierToken,
+	)
+	defer final.Body.Close()
+	if final.StatusCode != http.StatusOK {
+		t.Fatalf("mission acceptance status=%d want=200", final.StatusCode)
+	}
+	var acceptedMission struct {
+		Schema              string `json:"schema"`
+		WorkID              string `json:"work_id"`
+		WorksExecutionID    string `json:"works_execution_id"`
+		ExecutionContextID  string `json:"execution_context_id"`
+		ExecutionPDRID      string `json:"execution_pdr_id"`
+		VerificationSubject string `json:"verification_subject"`
+		Verified            bool   `json:"verified"`
+		VerifierID          string `json:"verifier_id"`
+		EvidenceRef         string `json:"evidence_ref"`
+		Outcome             string `json:"outcome"`
+	}
+	if err := json.NewDecoder(final.Body).Decode(&acceptedMission); err != nil {
+		t.Fatalf("decode mission acceptance: %v", err)
+	}
+	if acceptedMission.Schema != "dispatch.mission-acceptance/1.0" ||
+		acceptedMission.WorkID != workID ||
+		acceptedMission.WorksExecutionID != dispatch.Receipt.WorksExecutionID ||
+		acceptedMission.ExecutionContextID != dispatch.Receipt.ExecutionContextID ||
+		acceptedMission.ExecutionPDRID != proof.ExecutionPDRID ||
+		acceptedMission.VerificationSubject != proof.VerificationSubject ||
+		!acceptedMission.Verified ||
+		acceptedMission.Outcome != "SUCCEEDED" ||
+		acceptedMission.VerifierID != "sentinel:exact-head" ||
+		acceptedMission.EvidenceRef != "sentinel.receipt:"+proof.SentinelBReceiptID {
+		t.Fatalf("durable mission acceptance mismatch: %+v", acceptedMission)
+	}
+
+	// Exact owner replay is idempotent and therefore a second durable readback.
+	replay := postMissionAcceptance(
+		t, base, workID, dispatch.Receipt.WorksExecutionID,
+		missionBody, missionAcceptanceVerifierToken,
+	)
+	defer replay.Body.Close()
+	if replay.StatusCode != http.StatusOK {
+		t.Fatalf("mission acceptance replay status=%d want=200", replay.StatusCode)
+	}
+	var replayed map[string]any
+	if err := json.NewDecoder(replay.Body).Decode(&replayed); err != nil {
+		t.Fatalf("decode mission acceptance replay: %v", err)
+	}
+	if replayed["verified"] != true || replayed["outcome"] != "SUCCEEDED" ||
+		replayed["verification_subject"] != proof.VerificationSubject {
+		t.Fatalf("durable verified replay mismatch: %+v", replayed)
+	}
+
+	// Falsification after acceptance: neither a wrong execution PDR nor a
+	// stale Sentinel head may rewrite the terminal owner truth.
+	wrongPDR := map[string]any{}
+	for k, v := range missionBody { wrongPDR[k] = v }
+	wrongPDR["execution_pdr_id"] = "pdr_99999999999999999999999999999999"
+	wrong := postMissionAcceptance(
+		t, base, workID, dispatch.Receipt.WorksExecutionID,
+		wrongPDR, missionAcceptanceVerifierToken,
+	)
+	defer wrong.Body.Close()
+	if wrong.StatusCode != http.StatusConflict {
+		t.Fatalf("wrong-PDR acceptance status=%d want=409", wrong.StatusCode)
+	}
+
+	staleBody := map[string]any{}
+	for k, v := range missionBody { staleBody[k] = v }
+	staleBody["sentinel_head_sha"] = os.Getenv("P2_SHA_A")
+	stale := postMissionAcceptance(
+		t, base, workID, dispatch.Receipt.WorksExecutionID,
+		staleBody, missionAcceptanceVerifierToken,
+	)
+	defer stale.Body.Close()
+	if stale.StatusCode != http.StatusConflict {
+		t.Fatalf("stale-subject acceptance status=%d want=409", stale.StatusCode)
+	}
+
+	postFalsification := postMissionAcceptance(
+		t, base, workID, dispatch.Receipt.WorksExecutionID,
+		missionBody, missionAcceptanceVerifierToken,
+	)
+	defer postFalsification.Body.Close()
+	if postFalsification.StatusCode != http.StatusOK {
+		t.Fatalf("post-falsification durable readback status=%d want=200", postFalsification.StatusCode)
+	}
+
 	t.Logf("REMOTE-SAME-CAUSAL PASS work=%s ctx=%s action=%s pdr=%s subject=%s sentinel=%s",
 		workID, dispatch.Receipt.ExecutionContextID, actionID, proof.ExecutionPDRID,
 		proof.VerificationSubject, proof.SentinelBReceiptID)
@@ -727,5 +829,5 @@ GOEOF
   go test ./services/api -run '^TestStewardRemoteSameCausalP2$' -count=1 -v
 )
 
-printf '{"schema":"steward.p2.remote-same-causal/0.1","runtime_head":"%s","works_head":"%s","trust_gateway_head":"%s","aie_head":"%s","sentinel_head":"%s","runtime_to_works":"PASS","tg_v21":"PASS","aie_action_time_revalidation":"PASS","works_pdr_correlation":"PASS","governed_remote_git_egress":"PASS","credential_surrogation":"PASS","remote_exact_sha_readback":"PASS","post_effect_subject_binding":"PASS","current_subject_sentinel_ship":"PASS","revocation_fail_closed":"PASS","same_causal_owner_acceptance_readiness":"PASS","isolated_worktree_binding":"PASS","production_deployment":"absent"}\n' \
+printf '{"schema":"steward.p2.remote-same-causal/0.1","runtime_head":"%s","works_head":"%s","trust_gateway_head":"%s","aie_head":"%s","sentinel_head":"%s","runtime_to_works":"PASS","tg_v21":"PASS","aie_action_time_revalidation":"PASS","works_pdr_correlation":"PASS","governed_remote_git_egress":"PASS","credential_surrogation":"PASS","remote_exact_sha_readback":"PASS","post_effect_subject_binding":"PASS","current_subject_sentinel_ship":"PASS","revocation_fail_closed":"PASS","same_causal_owner_acceptance_readiness":"PASS","isolated_worktree_binding":"PASS","canonical_works_mission_acceptance":"PASS","durable_verified_readback":"PASS","wrong_pdr_fail_closed":"PASS","stale_subject_fail_closed":"PASS","production_deployment":"absent"}\n' \
   "$expected_runtime" "$expected_works" "$expected_tg" "$expected_aie" "$expected_sentinel"
