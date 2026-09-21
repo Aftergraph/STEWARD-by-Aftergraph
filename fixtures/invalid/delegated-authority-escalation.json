@@ -1,0 +1,14 @@
+{
+  "schema_version": "steward.delegated-authority/1.0",
+  "grant_id": "grant-self-authorized-000",
+  "grantee_persona_id": "persona-self-authorizing-reviewer-v0",
+  "authority_source": {
+    "owner": "steward-maintainer",
+    "grant_ref": "self:asserted"
+  },
+  "capabilities": ["pr:merge", "repo:admin"],
+  "parent_capabilities": ["repo:read"],
+  "granted_at": "2026-09-21T08:00:00Z",
+  "expires_at": "2026-09-28T08:00:00Z",
+  "status": "granted"
+}
