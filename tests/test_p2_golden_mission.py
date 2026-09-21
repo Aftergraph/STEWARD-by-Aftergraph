@@ -9,6 +9,7 @@ from steward.p2_golden_mission import (
 )
 from steward.ports import (
     GitSubjectPort,
+    GoldenMissionAcceptancePort,
     RuntimeDispatchV2Request,
     RuntimeSubjectBindingPort,
     RuntimeV2Port,
@@ -78,6 +79,32 @@ class GitTransport:
         }
 
 
+class AcceptanceTransport:
+    def __init__(self, decision="accept", mutate=None):
+        self.decision = decision
+        self.mutate = mutate
+        self.calls = []
+
+    def evaluate(self, payload):
+        self.calls.append(payload)
+        verification = payload["verification"]
+        out = {
+            "decision": self.decision,
+            "reason": (
+                "GOLDEN-001: independently verified"
+                if self.decision == "accept"
+                else "VERIFIER-FAILURE: rejected"
+            ),
+            "pin": "sha256:" + "1" * 64,
+            "subject_ref": verification["subject_ref"],
+            "action_id": verification["action_id"],
+            "action_decision_id": verification["action_decision_id"],
+        }
+        if self.mutate:
+            self.mutate(out)
+        return out
+
+
 class SentinelTransport:
     def __init__(self, verdict="SHIP", head=CANDIDATE):
         self.verdict = verdict
@@ -138,9 +165,10 @@ def response(payload, status=200):
 
 
 class GoldenMissionTests(unittest.TestCase):
-    def coordinator(self, git=None, sentinel=None):
+    def coordinator(self, git=None, sentinel=None, acceptance=None):
         subject = SubjectTransport()
         git = git or GitTransport()
+        acceptance = acceptance or AcceptanceTransport()
         return (
             GoldenMissionCoordinator(
                 RuntimeV2Port(RuntimeTransport()),
@@ -148,13 +176,18 @@ class GoldenMissionTests(unittest.TestCase):
                 GitSubjectPort(git),
                 RuntimeSubjectBindingPort(subject),
                 SentinelPort(sentinel or SentinelTransport()),
+                GoldenMissionAcceptancePort(
+                    acceptance,
+                    verifier_principal="prn_" + "e" * 32,
+                ),
             ),
             git,
             subject,
+            acceptance,
         )
 
     def test_accepts_only_composed_current_exact_subject_ship(self):
-        coordinator, _, subject = self.coordinator()
+        coordinator, _, subject, acceptance = self.coordinator()
         tg = {
             "decision": "allow",
             "execution_context_id": CTX,
@@ -167,18 +200,21 @@ class GoldenMissionTests(unittest.TestCase):
         self.assertTrue(outcome.accepted)
         self.assertEqual(f"git:Aftergraph/STEWARD-by-Aftergraph@{CANDIDATE}", outcome.subject_binding.subject)
         self.assertEqual(1, len(subject.calls))
+        self.assertEqual(1, len(acceptance.calls))
+        self.assertEqual("accept", outcome.acceptance.decision)
 
     def test_approval_stops_before_effect_subject_and_sentinel(self):
-        coordinator, git, subject = self.coordinator()
+        coordinator, git, subject, acceptance = self.coordinator()
         tg = {"decision": "needs_approval", "approvalId": "approval/1"}
         with patch("steward.ports.trust_gateway.urlopen", return_value=response(tg, 202)):
             outcome = coordinator.execute(request())
         self.assertIsInstance(outcome, GoldenMissionNeedsApproval)
         self.assertEqual(0, git.capture_calls)
         self.assertEqual([], subject.calls)
+        self.assertEqual([], acceptance.calls)
 
     def test_non_ship_verdict_never_accepts_mission(self):
-        coordinator, _, _ = self.coordinator(sentinel=SentinelTransport("DO_NOT_SHIP"))
+        coordinator, _, _, acceptance = self.coordinator(sentinel=SentinelTransport("DO_NOT_SHIP"))
         tg = {
             "decision": "allow",
             "execution_context_id": CTX,
@@ -188,9 +224,70 @@ class GoldenMissionTests(unittest.TestCase):
         with patch("steward.ports.trust_gateway.urlopen", return_value=response(tg)):
             outcome = coordinator.execute(request())
         self.assertFalse(outcome.accepted)
+        self.assertEqual("reject", acceptance.calls[0]["verification"]["verdict"])
+
+    def test_owner_reject_overrides_sentinel_ship(self):
+        acceptance = AcceptanceTransport(decision="reject")
+        coordinator, _, _, _ = self.coordinator(acceptance=acceptance)
+        tg = {
+            "decision": "allow",
+            "execution_context_id": CTX,
+            "execution_pdr_id": "pdr_" + "e" * 32,
+            "admission_decision_id": PDR,
+        }
+        with patch("steward.ports.trust_gateway.urlopen", return_value=response(tg)):
+            outcome = coordinator.execute(request())
+        self.assertFalse(outcome.accepted)
+        self.assertEqual("SHIP", outcome.verification.verdict)
+        self.assertEqual("reject", outcome.acceptance.decision)
+
+    def test_owner_subject_rebind_fails_closed(self):
+        def mutate(out):
+            out["subject_ref"] = "git:Aftergraph/STEWARD-by-Aftergraph@" + "f" * 40
+        coordinator, _, _, _ = self.coordinator(
+            acceptance=AcceptanceTransport(mutate=mutate)
+        )
+        tg = {
+            "decision": "allow",
+            "execution_context_id": CTX,
+            "execution_pdr_id": "pdr_" + "e" * 32,
+            "admission_decision_id": PDR,
+        }
+        with patch("steward.ports.trust_gateway.urlopen", return_value=response(tg)):
+            with self.assertRaisesRegex(RuntimeError, "rebound verification subject"):
+                coordinator.execute(request())
+
+    def test_owner_action_rebind_fails_closed(self):
+        def mutate(out):
+            out["action_id"] = "act_" + "f" * 32
+        coordinator, _, _, _ = self.coordinator(
+            acceptance=AcceptanceTransport(mutate=mutate)
+        )
+        tg = {
+            "decision": "allow",
+            "execution_context_id": CTX,
+            "execution_pdr_id": "pdr_" + "e" * 32,
+            "admission_decision_id": PDR,
+        }
+        with patch("steward.ports.trust_gateway.urlopen", return_value=response(tg)):
+            with self.assertRaisesRegex(RuntimeError, "rebound action"):
+                coordinator.execute(request())
+
+    def test_tg_admission_decision_rebind_fails_closed_before_acceptance(self):
+        coordinator, _, _, acceptance = self.coordinator()
+        tg = {
+            "decision": "allow",
+            "execution_context_id": CTX,
+            "execution_pdr_id": "pdr_" + "e" * 32,
+            "admission_decision_id": "pdr_" + "f" * 32,
+        }
+        with patch("steward.ports.trust_gateway.urlopen", return_value=response(tg)):
+            with self.assertRaisesRegex(RuntimeError, "admission decision"):
+                coordinator.execute(request())
+        self.assertEqual([], acceptance.calls)
 
     def test_stale_sentinel_subject_fails_closed(self):
-        coordinator, _, _ = self.coordinator(sentinel=SentinelTransport(head="f" * 40))
+        coordinator, _, _, acceptance = self.coordinator(sentinel=SentinelTransport(head="f" * 40))
         tg = {
             "decision": "allow",
             "execution_context_id": CTX,
@@ -200,6 +297,7 @@ class GoldenMissionTests(unittest.TestCase):
         with patch("steward.ports.trust_gateway.urlopen", return_value=response(tg)):
             with self.assertRaisesRegex(RuntimeError, "different Git subject"):
                 coordinator.execute(request())
+        self.assertEqual([], acceptance.calls)
 
 
 if __name__ == "__main__":
