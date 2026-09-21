@@ -1,0 +1,58 @@
+name: P2 Runtime-WORKS cross-process proof
+
+on:
+  pull_request:
+    paths:
+      - "scripts/p2_runtime_works_cross_process_proof.sh"
+      - ".github/workflows/p2-runtime-works-cross-process.yml"
+      - "contracts/p2-owner-candidate-lock.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  runtime-works-cross-process:
+    name: Runtime command -> WORKS HTTP owner proof
+    runs-on: [self-hosted, linux, x64, aftergraph-ci]
+    timeout-minutes: 25
+    steps:
+      - name: Checkout STEWARD candidate
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          clean: true
+
+      - name: Checkout exact Runtime owner head
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: Aftergraph/runtime
+          ref: d9c5efb3a74222326ec71b06d5c2df2d4215d68f
+          path: .p2/runtime
+          persist-credentials: false
+          clean: true
+
+      - name: Checkout exact WORKS owner head
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: Aftergraph/works-execution
+          ref: 64cabe65bf210b2c65b525750acb45fc6d53894d
+          path: .p2/works-execution
+          persist-credentials: false
+          clean: true
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "24"
+
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff
+        with:
+          go-version: "1.25"
+          cache: false
+
+      - name: Prove exact Runtime command over real WORKS HTTP/store
+        env:
+          RUNTIME_EXPECTED_HEAD: d9c5efb3a74222326ec71b06d5c2df2d4215d68f
+          WORKS_EXPECTED_HEAD: 64cabe65bf210b2c65b525750acb45fc6d53894d
+        run: |
+          bash scripts/p2_runtime_works_cross_process_proof.sh             "$GITHUB_WORKSPACE/.p2/runtime"             "$GITHUB_WORKSPACE/.p2/works-execution"             "$RUNTIME_EXPECTED_HEAD"             "$WORKS_EXPECTED_HEAD"
