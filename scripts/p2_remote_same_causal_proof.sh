@@ -242,12 +242,13 @@ const deps = {
   const db = open(path.join(dir, 'gateway.db'));
   try {
     const vault = new SecretsVault({ db, enabled: true, master: 'p2-remote-proof-ephemeral-master' });
-    vault.setSecret(input.tenantId, 'github-proof-token', token);
+    const vaultTenant = 'main';
+    vault.setSecret(vaultTenant, 'github-proof-token', token);
     const now = Date.now();
     const store = new CredentialHandleStore({ db, vault, now: () => Date.now() });
     const apiPath = '/repos/' + targetRepo + '/git/refs/heads/' + targetBranch;
     const handle = store.issue({
-      tenant: input.tenantId,
+      tenant: vaultTenant,
       secretKey: 'github-proof-token',
       principalId: input.principalId,
       missionId: input.missionId,
@@ -257,7 +258,11 @@ const deps = {
       allowedDestinations: ['api.github.com'],
       allowedMethods: ['PATCH'],
       allowedPathPrefixes: [apiPath],
-      scopeRefs: ['repo:' + targetRepo, 'ref:' + ref],
+      scopeRefs: [
+        'repo:' + targetRepo,
+        'ref:' + ref,
+        'platform-tenant:' + input.tenantId,
+      ],
       expiresAt: now + 5 * 60 * 1000,
     });
 
