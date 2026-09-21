@@ -12,8 +12,11 @@ There is deliberately no direct-to-WORKS fallback in this port.
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+import json
+import os
 import re
-from typing import Any, Mapping, Protocol
+import subprocess
+from typing import Any, Mapping, Protocol, Sequence
 
 
 _CTX_RE = re.compile(r"^ctx_[a-f0-9]{32}$")
@@ -28,6 +31,14 @@ class RuntimeUnavailableError(RuntimeErrorBase):
     """The canonical Runtime transport is unavailable."""
 
 
+class RuntimeRejectedError(RuntimeErrorBase):
+    """Canonical Runtime rejected the dispatch before effect execution."""
+
+    def __init__(self, reason: str) -> None:
+        super().__init__(f"Runtime rejected dispatch: {reason}")
+        self.reason = reason
+
+
 class RuntimeContractError(RuntimeErrorBase):
     """Runtime request/receipt violates the frozen composition contract."""
 
@@ -40,6 +51,7 @@ class RuntimeDispatchRequest:
     runtime dispatch identity deterministically from the idempotency key.
     """
 
+    work_id: str
     mission_id: str
     authority_ref: str
     authority_epoch: int
@@ -65,6 +77,7 @@ class RuntimeDispatchRequest:
             raise RuntimeContractError("all Runtime dispatch bindings must be non-empty")
         return {
             "schema": "runtime.dispatch-seal/0.1",
+            "workId": self.work_id,
             "missionId": self.mission_id,
             "authorityRef": self.authority_ref,
             "authorityEpoch": self.authority_epoch,
@@ -113,6 +126,72 @@ class RuntimeTransport(Protocol):
     """Deployment-provided transport into canonical Runtime."""
 
     def dispatch(self, payload: Mapping[str, Any]) -> Mapping[str, Any]: ...
+
+
+class SubprocessRuntimeTransport:
+    """Concrete STEWARD transport for Runtime's runtime-steward-dispatch bridge.
+
+    The request body carries no credentials. WORKS connectivity and bearer
+    material stay in the Runtime process environment.
+    """
+
+    def __init__(
+        self,
+        command: Sequence[str] = ("runtime-steward-dispatch",),
+        *,
+        timeout: float = 15.0,
+        environment: Mapping[str, str] | None = None,
+    ) -> None:
+        if not command or not all(isinstance(part, str) and part for part in command):
+            raise ValueError("Runtime bridge command must be a non-empty argv sequence")
+        if timeout <= 0:
+            raise ValueError("timeout must be > 0")
+        self._command = tuple(command)
+        self._timeout = timeout
+        self._environment = dict(environment) if environment is not None else None
+
+    def dispatch(self, payload: Mapping[str, Any]) -> Mapping[str, Any]:
+        serialized = json.dumps(payload, separators=(",", ":"))
+        env = None
+        if self._environment is not None:
+            env = os.environ.copy()
+            env.update(self._environment)
+        try:
+            proc = subprocess.run(
+                self._command,
+                input=serialized,
+                capture_output=True,
+                text=True,
+                timeout=self._timeout,
+                env=env,
+                shell=False,
+                check=False,
+            )
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            raise RuntimeUnavailableError("canonical Runtime bridge unavailable") from exc
+
+        stdout = proc.stdout.strip()
+        try:
+            decoded = json.loads(stdout)
+        except json.JSONDecodeError as exc:
+            raise RuntimeContractError("Runtime bridge returned non-JSON output") from exc
+        if not isinstance(decoded, Mapping):
+            raise RuntimeContractError("Runtime bridge output must be a JSON object")
+
+        if proc.returncode != 0:
+            reason = decoded.get("reason")
+            if isinstance(reason, str) and reason:
+                raise RuntimeRejectedError(reason)
+            raise RuntimeUnavailableError(
+                f"Runtime bridge exited with status {proc.returncode}"
+            )
+
+        if decoded.get("ok") is not True:
+            raise RuntimeContractError("Runtime bridge success response missing ok=true")
+        receipt = decoded.get("receipt")
+        if not isinstance(receipt, Mapping):
+            raise RuntimeContractError("Runtime bridge success response missing receipt")
+        return receipt
 
 
 class RuntimePort:

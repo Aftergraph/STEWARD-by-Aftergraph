@@ -5,7 +5,9 @@ from .runtime import (
     RuntimeDispatchReceipt,
     RuntimePort,
     RuntimeContractError,
+    RuntimeRejectedError,
     RuntimeUnavailableError,
+    SubprocessRuntimeTransport,
 )
 from .trust_gateway import (
     TrustGatewayActionRequest,
@@ -37,7 +39,9 @@ __all__ = [
     "RuntimeDispatchReceipt",
     "RuntimePort",
     "RuntimeContractError",
+    "RuntimeRejectedError",
     "RuntimeUnavailableError",
+    "SubprocessRuntimeTransport",
     "TrustGatewayActionRequest",
     "TrustGatewayActionReceipt",
     "TrustGatewayApprovalRequired",
