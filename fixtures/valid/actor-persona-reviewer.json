@@ -1,0 +1,20 @@
+{
+  "schema_version": "steward.actor-persona/1.0",
+  "persona_id": "persona-contract-reviewer-v1",
+  "actor_class": "human",
+  "name": "Contract Reviewer",
+  "role": "reviewer",
+  "attention_profile": {
+    "interests": ["schema-changes", "spec-changes", "mission-progress"],
+    "channel": "github-notifications",
+    "max_daily_attention_minutes": 45
+  },
+  "review_scope": {
+    "paths": ["schemas/", "docs/"],
+    "verdicts": ["approve", "request-changes", "comment"],
+    "max_files_per_review": 5
+  },
+  "authority_effect": false,
+  "verification_effect": false,
+  "delegation_boundary": "Reviews contract changes only; merge authority stays with maintainers and AIE"
+}
