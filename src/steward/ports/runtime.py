@@ -70,6 +70,7 @@ class RuntimeDispatchRequest:
     budget_ceiling: int
     checkpoint_id: str
     evidence_root: str
+    verification_subject: str
     causal_id: str
 
     def to_runtime_wire(self) -> dict[str, Any]:
@@ -95,6 +96,7 @@ class RuntimeDispatchRequest:
             "budgetCeiling": self.budget_ceiling,
             "checkpointId": self.checkpoint_id,
             "evidenceRoot": self.evidence_root,
+            "verificationSubject": self.verification_subject,
             "causalId": self.causal_id,
         }
 
@@ -152,7 +154,6 @@ class RuntimeDispatchV2Request:
     budget_ceiling: int
     checkpoint_id: str
     evidence_root: str
-    verification_subject: str
     causal_id: str
 
     def to_runtime_wire(self) -> dict[str, Any]:
@@ -198,7 +199,6 @@ class RuntimeDispatchV2Request:
             "budgetCeiling": self.budget_ceiling,
             "checkpointId": self.checkpoint_id,
             "evidenceRoot": self.evidence_root,
-            "verificationSubject": self.verification_subject,
             "causalId": self.causal_id,
         }
 
