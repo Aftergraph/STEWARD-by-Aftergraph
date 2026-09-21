@@ -3,7 +3,10 @@
 from .runtime import (
     RuntimeDispatchRequest,
     RuntimeDispatchReceipt,
+    RuntimeDispatchV2Request,
+    RuntimeDispatchV2Receipt,
     RuntimePort,
+    RuntimeV2Port,
     RuntimeContractError,
     RuntimeRejectedError,
     RuntimeUnavailableError,
@@ -37,7 +40,10 @@ from .git_subject import (
 __all__ = [
     "RuntimeDispatchRequest",
     "RuntimeDispatchReceipt",
+    "RuntimeDispatchV2Request",
+    "RuntimeDispatchV2Receipt",
     "RuntimePort",
+    "RuntimeV2Port",
     "RuntimeContractError",
     "RuntimeRejectedError",
     "RuntimeUnavailableError",

@@ -21,6 +21,14 @@ from typing import Any, Mapping, Protocol, Sequence
 
 _CTX_RE = re.compile(r"^ctx_[a-f0-9]{32}$")
 _TRACE_RE = re.compile(r"^trc_[a-f0-9]{32}$")
+_ORG_RE = re.compile(r"^org_[a-f0-9]{32}$")
+_TENANT_RE = re.compile(r"^ten_[a-f0-9]{32}$")
+_PRINCIPAL_RE = re.compile(r"^prn_[a-f0-9]{32}$")
+_AUTH_RE = re.compile(r"^auth_[a-f0-9]{32}$")
+_WORK_RE = re.compile(r"^wrk_[a-f0-9]{32}$")
+_WORKER_LEASE_RE = re.compile(r"^lse_[a-f0-9]{32}$")
+_PDR_RE = re.compile(r"^pdr_[a-f0-9]{32}$")
+_WORKER_RE = re.compile(r"^wrkr_[a-f0-9]{32}$")
 
 
 class RuntimeErrorBase(RuntimeError):
@@ -122,6 +130,123 @@ class RuntimeDispatchReceipt:
         )
 
 
+@dataclass(frozen=True)
+class RuntimeDispatchV2Request:
+    """P2/V2.1 Runtime request for WORKS dispatch.acceptance/2.0.
+
+    No authority_epoch is present. Authority is represented by the canonical
+    AuthorityLease + admission decision references, and is revalidated later at
+    the consequential action boundary by Trust Gateway through AIE.
+    """
+
+    work_id: str
+    organization_id: str
+    tenant_id: str
+    principal_id: str
+    mission_id: str
+    authority_lease_id: str
+    worker_lease_id: str
+    admission_decision_id: str
+    attempt_id: str
+    effect_id: str
+    idempotency_key: str
+    budget_ref: str
+    budget_ceiling: int
+    checkpoint_id: str
+    evidence_root: str
+    verification_subject: str
+    causal_id: str
+
+    def to_runtime_wire(self) -> dict[str, Any]:
+        patterns = {
+            "work_id": (_WORK_RE, self.work_id),
+            "organization_id": (_ORG_RE, self.organization_id),
+            "tenant_id": (_TENANT_RE, self.tenant_id),
+            "principal_id": (_PRINCIPAL_RE, self.principal_id),
+            "authority_lease_id": (_AUTH_RE, self.authority_lease_id),
+            "worker_lease_id": (_WORKER_LEASE_RE, self.worker_lease_id),
+            "admission_decision_id": (_PDR_RE, self.admission_decision_id),
+        }
+        for name, (pattern, value) in patterns.items():
+            if not isinstance(value, str) or not pattern.fullmatch(value):
+                raise RuntimeContractError(f"{name} has invalid canonical format")
+        if not isinstance(self.budget_ceiling, int) or self.budget_ceiling < 0:
+            raise RuntimeContractError("budget_ceiling must be an integer >= 0")
+        for name, value in (
+            ("mission_id", self.mission_id),
+            ("attempt_id", self.attempt_id),
+            ("effect_id", self.effect_id),
+            ("idempotency_key", self.idempotency_key),
+            ("budget_ref", self.budget_ref),
+            ("checkpoint_id", self.checkpoint_id),
+            ("evidence_root", self.evidence_root),
+            ("verification_subject", self.verification_subject),
+            ("causal_id", self.causal_id),
+        ):
+            if not isinstance(value, str) or not value.strip():
+                raise RuntimeContractError(f"{name} is required")
+        return {
+            "workId": self.work_id,
+            "organizationId": self.organization_id,
+            "tenantId": self.tenant_id,
+            "principalId": self.principal_id,
+            "missionId": self.mission_id,
+            "authorityLeaseId": self.authority_lease_id,
+            "workerLeaseId": self.worker_lease_id,
+            "admissionDecisionId": self.admission_decision_id,
+            "attemptId": self.attempt_id,
+            "effectId": self.effect_id,
+            "idempotencyKey": self.idempotency_key,
+            "budgetRef": self.budget_ref,
+            "budgetCeiling": self.budget_ceiling,
+            "checkpointId": self.checkpoint_id,
+            "evidenceRoot": self.evidence_root,
+            "verificationSubject": self.verification_subject,
+            "causalId": self.causal_id,
+        }
+
+
+@dataclass(frozen=True)
+class RuntimeDispatchV2Receipt:
+    runtime_dispatch_id: str
+    works_execution_id: str
+    work_id: str
+    execution_context_id: str
+    trace_id: str
+    worker_id: str
+
+    @classmethod
+    def from_wire(cls, payload: Mapping[str, Any]) -> "RuntimeDispatchV2Receipt":
+        values = {
+            "runtime_dispatch_id": payload.get("runtimeDispatchId"),
+            "works_execution_id": payload.get("worksExecutionId"),
+            "work_id": payload.get("workId"),
+            "execution_context_id": payload.get("executionContextId"),
+            "trace_id": payload.get("traceId"),
+            "worker_id": payload.get("workerId"),
+        }
+        if not isinstance(values["runtime_dispatch_id"], str) or not values["runtime_dispatch_id"].strip():
+            raise RuntimeContractError("Runtime V2 receipt missing runtimeDispatchId")
+        if not isinstance(values["works_execution_id"], str) or not values["works_execution_id"].strip():
+            raise RuntimeContractError("Runtime V2 receipt missing worksExecutionId")
+        if not isinstance(values["work_id"], str) or not _WORK_RE.fullmatch(values["work_id"]):
+            raise RuntimeContractError("Runtime V2 receipt carries malformed workId")
+        if not isinstance(values["execution_context_id"], str) or not _CTX_RE.fullmatch(values["execution_context_id"]):
+            raise RuntimeContractError("Runtime V2 receipt carries malformed executionContextId")
+        if not isinstance(values["trace_id"], str) or not _TRACE_RE.fullmatch(values["trace_id"]):
+            raise RuntimeContractError("Runtime V2 receipt carries malformed traceId")
+        if not isinstance(values["worker_id"], str) or not _WORKER_RE.fullmatch(values["worker_id"]):
+            raise RuntimeContractError("Runtime V2 receipt carries malformed workerId")
+        return cls(
+            runtime_dispatch_id=values["runtime_dispatch_id"],
+            works_execution_id=values["works_execution_id"],
+            work_id=values["work_id"],
+            execution_context_id=values["execution_context_id"],
+            trace_id=values["trace_id"],
+            worker_id=values["worker_id"],
+        )
+
+
 class RuntimeTransport(Protocol):
     """Deployment-provided transport into canonical Runtime."""
 
@@ -210,3 +335,24 @@ class RuntimePort:
         if not isinstance(payload, Mapping):
             raise RuntimeContractError("Runtime transport returned non-object receipt")
         return RuntimeDispatchReceipt.from_wire(payload)
+
+
+class RuntimeV2Port:
+    """Fail-closed P2 port into Runtime's dispatch.acceptance/2.0 bridge."""
+
+    def __init__(self, transport: RuntimeTransport) -> None:
+        self._transport = transport
+
+    def dispatch(self, request: RuntimeDispatchV2Request) -> RuntimeDispatchV2Receipt:
+        try:
+            payload = self._transport.dispatch(request.to_runtime_wire())
+        except RuntimeErrorBase:
+            raise
+        except Exception as exc:
+            raise RuntimeUnavailableError("canonical Runtime V2 transport failed") from exc
+        if not isinstance(payload, Mapping):
+            raise RuntimeContractError("Runtime V2 transport returned non-object receipt")
+        receipt = RuntimeDispatchV2Receipt.from_wire(payload)
+        if receipt.work_id != request.work_id:
+            raise RuntimeContractError("Runtime V2 receipt rebound to another Work")
+        return receipt
