@@ -16,7 +16,7 @@ class VisualFrontierProfileTests(unittest.TestCase):
         validator = Draft202012Validator(schema, format_checker=FormatChecker())
         return list(validator.iter_errors(instance))
 
-    def test_revision_4_frontier_profile_is_valid(self):
+    def test_revision_5_frontier_profile_is_valid(self):
         profile = self._read("fixtures/valid/visual-frontier-profile.json")
         self.assertEqual([], self._errors(profile))
 
@@ -29,13 +29,35 @@ class VisualFrontierProfileTests(unittest.TestCase):
         self.assertEqual("Aftergraph/brand", profile["identity_owner"])
         self.assertEqual("Aftergraph/STEWARD-by-Aftergraph", profile["renderer_owner"])
 
-    def test_required_motion_and_state_vocabulary_are_pinned(self):
+    def test_runtime_evidence_is_exactly_pinned(self):
         profile = self._read("fixtures/valid/visual-frontier-profile.json")
-        self.assertTrue({"idle", "blink", "verify"} <= set(profile["runtime"]["required_clips"]))
+        self.assertEqual(5, profile["source_scene"]["revision"])
+        self.assertEqual("frontier-proportions/1.0", profile["source_scene"]["proportion_profile"])
+        self.assertEqual("/assets/steward-rig-v2.glb", profile["runtime"]["asset_path"])
         self.assertEqual(
-            {"idle", "thinking", "planning", "executing", "verifying", "succeeded"},
-            set(profile["state_assets"]["states"]),
+            "018fb057659975d67a3f6de3dc90a5167bc046d3bf366e3c0a9fe6ec96ecf6a8",
+            profile["runtime"]["asset_sha256"],
         )
+        self.assertEqual(
+            "a25fa626979b3f938e9cec232cbaef52771e9db3",
+            profile["runtime"]["source_commit"],
+        )
+        self.assertEqual({"idle", "blink", "verify"}, set(profile["runtime"]["required_clips"]))
+
+    def test_visual_state_vocabulary_matches_presence_projection(self):
+        profile = self._read("fixtures/valid/visual-frontier-profile.json")
+        presence_schema = self._read("schemas/presence-projection.schema.json")
+        canonical_states = presence_schema["properties"]["displayed_state"]["enum"]
+        self.assertEqual(canonical_states, profile["state_assets"]["states"])
+
+    def test_state_pack_is_revision_5_and_full_vocabulary(self):
+        profile = self._read("fixtures/valid/visual-frontier-profile.json")
+        state_assets = profile["state_assets"]
+        self.assertEqual("steward.rig-state-assets/4.0", state_assets["schema_version"])
+        self.assertEqual(5, state_assets["source_revision"])
+        self.assertEqual(12, len(state_assets["states"]))
+        self.assertFalse(state_assets["geometry_topology_changed"])
+        self.assertFalse(state_assets["armature_changed"])
 
 
 if __name__ == "__main__":
