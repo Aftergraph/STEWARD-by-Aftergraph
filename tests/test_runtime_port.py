@@ -94,10 +94,12 @@ class RuntimePortTests(unittest.TestCase):
 
 class SubprocessRuntimeTransportTests(unittest.TestCase):
     def _echo_command(self, response, exit_code=0):
+        encoded = json.dumps(response)
         script = (
             "import json,sys;"
             "req=json.load(sys.stdin);"
-            f"print(json.dumps({json.dumps(response)}));"
+            f"payload=json.loads({encoded!r});"
+            "print(json.dumps(payload));"
             f"sys.exit({exit_code})"
         )
         return (sys.executable, "-c", script)
