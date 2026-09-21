@@ -6,8 +6,8 @@
     "owner": "aie",
     "grant_ref": "aie:grant/org-aftergraph/repo-steward/merge-window-001"
   },
-  "capabilities": ["repo:read", "repo:write", "pr:merge"],
-  "parent_capabilities": ["repo:read", "repo:write", "pr:create", "pr:merge", "repo:admin"],
+  "capabilities": ["repo:read", "repo:write", "pr:merge", "verify:delegate"],
+  "parent_capabilities": ["repo:read", "repo:write", "pr:create", "pr:merge", "repo:admin", "verify:delegate", "verify:exact-subject", "verify:projection"],
   "granted_at": "2026-09-21T08:00:00Z",
   "expires_at": "2026-09-28T08:00:00Z",
   "status": "granted"
