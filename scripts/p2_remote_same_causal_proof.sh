@@ -482,11 +482,12 @@ type remoteBindResult struct {
 func TestStewardRemoteSameCausalP2(t *testing.T) {
 	runtimeCLI := os.Getenv("STEWARD_RUNTIME_DISPATCH_CLI")
 	bindCLI := os.Getenv("STEWARD_RUNTIME_BIND_CLI")
+	runtimeRoot := os.Getenv("STEWARD_RUNTIME_ROOT")
 	nodeHarness := os.Getenv("STEWARD_REMOTE_NODE_HARNESS")
 	tgRoot := os.Getenv("STEWARD_TG_ROOT")
 	aieRoot := os.Getenv("STEWARD_AIE_ROOT")
 	stewardRoot := os.Getenv("STEWARD_CURRENT_ROOT")
-	if runtimeCLI == "" || bindCLI == "" || nodeHarness == "" || tgRoot == "" || aieRoot == "" || stewardRoot == "" {
+	if runtimeCLI == "" || bindCLI == "" || runtimeRoot == "" || nodeHarness == "" || tgRoot == "" || aieRoot == "" || stewardRoot == "" {
 		t.Fatal("proof paths missing")
 	}
 
@@ -524,6 +525,73 @@ func TestStewardRemoteSameCausalP2(t *testing.T) {
 	if err := json.Unmarshal(out, &dispatch); err != nil { t.Fatal(err) }
 	if !dispatch.OK || dispatch.Receipt.ExecutionContextID == "" || dispatch.Receipt.WorkID != workID {
 		t.Fatalf("bad Runtime receipt: %+v", dispatch)
+	}
+
+	// Exercise STEWARD's actual Work/Attempt -> isolated worktree -> exact
+	// candidate binding against the same Runtime owner commit used by the
+	// governed remote effect. The provider is proof-local; STEWARD remains
+	// composition-only and owns no worktree daemon.
+	worktreeProof := `
+import json, os, subprocess, sys, tempfile
+from pathlib import Path
+
+steward_root, runtime_root, work_id, attempt_id, repo, base_sha, candidate_sha = sys.argv[1:]
+sys.path.insert(0, str(Path(steward_root) / "src"))
+from steward.ports.git_subject import GitSubjectPort, GitWorktreeRequest
+
+class Provider:
+    def __init__(self):
+        self.root = tempfile.mkdtemp(prefix="p2-worktree-")
+        self.path = os.path.join(self.root, "candidate")
+        self.payload = None
+    def prepare_worktree(self, payload):
+        subprocess.run(["git","-C",runtime_root,"worktree","add","--detach",self.path,payload["baseSha"]],check=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
+        clean = subprocess.check_output(["git","-C",self.path,"status","--porcelain"],text=True).strip() == ""
+        self.payload = dict(payload)
+        return {**payload,"worktreeRef":self.path,"isolated":True,"clean":clean}
+    def capture_candidate(self, worktree_ref):
+        if worktree_ref != self.path:
+            raise RuntimeError("worktree ref mismatch")
+        subprocess.run(["git","-C",self.path,"reset","--hard",candidate_sha],check=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
+        head = subprocess.check_output(["git","-C",self.path,"rev-parse","HEAD"],text=True).strip()
+        return {
+            "repository": repo,
+            "workId": self.payload["workId"],
+            "attemptId": self.payload["attemptId"],
+            "worktreeRef": self.path,
+            "baseSha": self.payload["baseSha"],
+            "candidateSha": head,
+            "branchRef": self.payload.get("branchRef"),
+        }
+    def cleanup(self):
+        subprocess.run(["git","-C",runtime_root,"worktree","remove","--force",self.path],check=False,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
+        try: os.rmdir(self.root)
+        except OSError: pass
+
+provider = Provider()
+try:
+    port = GitSubjectPort(provider)
+    binding = port.prepare(GitWorktreeRequest(repository=repo, work_id=work_id, attempt_id=attempt_id, base_sha=base_sha, branch_ref="p2/governed-egress-live-proof"))
+    candidate = port.capture(binding)
+    assert binding.isolated and binding.clean
+    assert candidate.work_id == work_id
+    assert candidate.attempt_id == attempt_id
+    assert candidate.base_sha == base_sha
+    assert candidate.candidate_sha == candidate_sha
+    print(json.dumps({"isolated_worktree_binding":True,"work_id":work_id,"attempt_id":attempt_id,"base_sha":base_sha,"candidate_sha":candidate.candidate_sha}))
+finally:
+    provider.cleanup()
+`
+	wtCmd := exec.Command("python3", "-c", worktreeProof,
+		stewardRoot, runtimeRoot, workID, dispatchReq["attemptId"].(string),
+		os.Getenv("P2_TARGET_REPO"), os.Getenv("P2_SHA_A"), os.Getenv("P2_SHA_B"),
+	)
+	wtOut, err := wtCmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("isolated worktree binding failed: %v output=%s", err, wtOut)
+	}
+	if !strings.Contains(string(wtOut), `"isolated_worktree_binding": true`) {
+		t.Fatalf("missing isolated worktree proof: %s", wtOut)
 	}
 
 	proofDir := t.TempDir()
@@ -650,6 +718,7 @@ GOEOF
   cd "$works_root"
   STEWARD_RUNTIME_DISPATCH_CLI="$dispatch_cli" \
   STEWARD_RUNTIME_BIND_CLI="$bind_cli" \
+  STEWARD_RUNTIME_ROOT="$runtime_root" \
   STEWARD_REMOTE_NODE_HARNESS="$proof_root/remote_effect_harness.js" \
   STEWARD_TG_ROOT="$tg_root" \
   STEWARD_AIE_ROOT="$aie_root" \
@@ -658,5 +727,5 @@ GOEOF
   go test ./services/api -run '^TestStewardRemoteSameCausalP2$' -count=1 -v
 )
 
-printf '{"schema":"steward.p2.remote-same-causal/0.1","runtime_head":"%s","works_head":"%s","trust_gateway_head":"%s","aie_head":"%s","sentinel_head":"%s","runtime_to_works":"PASS","tg_v21":"PASS","aie_action_time_revalidation":"PASS","works_pdr_correlation":"PASS","governed_remote_git_egress":"PASS","credential_surrogation":"PASS","remote_exact_sha_readback":"PASS","post_effect_subject_binding":"PASS","current_subject_sentinel_ship":"PASS","revocation_fail_closed":"PASS","same_causal_owner_acceptance_readiness":"PASS","isolated_worktree_binding":"absent","production_deployment":"absent"}\n' \
+printf '{"schema":"steward.p2.remote-same-causal/0.1","runtime_head":"%s","works_head":"%s","trust_gateway_head":"%s","aie_head":"%s","sentinel_head":"%s","runtime_to_works":"PASS","tg_v21":"PASS","aie_action_time_revalidation":"PASS","works_pdr_correlation":"PASS","governed_remote_git_egress":"PASS","credential_surrogation":"PASS","remote_exact_sha_readback":"PASS","post_effect_subject_binding":"PASS","current_subject_sentinel_ship":"PASS","revocation_fail_closed":"PASS","same_causal_owner_acceptance_readiness":"PASS","isolated_worktree_binding":"PASS","production_deployment":"absent"}\n' \
   "$expected_runtime" "$expected_works" "$expected_tg" "$expected_aie" "$expected_sentinel"
