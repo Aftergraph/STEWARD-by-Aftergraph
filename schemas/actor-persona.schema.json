@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aftergraph.org/schemas/steward-actor-persona-1.0.json",
+  "title": "STEWARD Actor Persona 1.0",
+  "description": "A named human or agent actor class within the STEWARD boundary. A persona defines attention, review scope and notification interests. It never grants authority, mints identity, or verifies outcomes; those remain owned by AIE, Trust Gateway and Sentinel.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "persona_id",
+    "actor_class",
+    "name",
+    "role",
+    "attention_profile",
+    "review_scope",
+    "authority_effect",
+    "verification_effect"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "steward.actor-persona/1.0"
+    },
+    "persona_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "actor_class": {
+      "enum": ["human", "agent", "machine"]
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "role": {
+      "enum": ["reviewer", "subscriber", "maintainer", "observer", "auditor", "integrator"]
+    },
+    "attention_profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["interests", "channel"],
+      "properties": {
+        "interests": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "enum": [
+              "mission-progress",
+              "verification-verdicts",
+              "authority-changes",
+              "policy-changes",
+              "budget-changes",
+              "schema-changes",
+              "spec-changes",
+              "ci-failures",
+              "security-advisories",
+              "release-notes"
+            ]
+          }
+        },
+        "channel": {
+          "enum": ["github-notifications", "github-mentions", "email", "rss", "webhook"]
+        },
+        "max_daily_attention_minutes": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "review_scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["paths", "verdicts"],
+      "properties": {
+        "paths": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^(schemas/|docs/|src/|scripts/|tests/|fixtures/|adr/|\\.github/)[A-Za-z0-9._/-]*$"
+          }
+        },
+        "verdicts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "enum": ["approve", "request-changes", "comment"]
+          }
+        },
+        "max_files_per_review": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "authority_effect": {
+      "const": false
+    },
+    "verification_effect": {
+      "const": false
+    },
+    "delegation_boundary": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}
