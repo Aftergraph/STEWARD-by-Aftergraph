@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#FAF6EF" />
+  <title>STEWARD by Aftergraph — Governed intelligent execution</title>
+  <meta name="description" content="STEWARD is Aftergraph's governed agent presence: capability composed through bounded authority, durable work, runtime execution, evidence, and independent verification." />
+  <meta property="og:title" content="STEWARD by Aftergraph" />
+  <meta property="og:description" content="Governed intelligent execution with visible boundaries and verifiable outcomes." />
+  <meta property="og:type" content="website" />
+  <style>
+    :root{--paper:#faf6ef;--lift:#fffdf8;--deep:#efe9df;--ink:#1e1b16;--soft:#665f55;--line:#d7cec0;--copper:#c2703d;--teal:#23615e;--moss:#3e7c59;--danger:#974c42}
+    *{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    a{color:inherit} .wrap{width:min(1180px,calc(100% - 36px));margin:auto}.nav{position:sticky;top:0;z-index:50;border-bottom:1px solid rgba(30,27,22,.1);background:rgba(250,246,239,.86);backdrop-filter:blur(18px)}
+    .navin{height:72px;display:flex;align-items:center;justify-content:space-between;gap:22px}.brand{display:flex;align-items:center;gap:12px;text-decoration:none;font-weight:800;letter-spacing:-.02em}.mark{width:34px;height:34px;border:2px solid var(--ink);border-radius:50%;position:relative}.mark:after{content:"";position:absolute;inset:8px;border:2px solid var(--copper);border-top-color:transparent;border-radius:50%;transform:rotate(35deg)}
+    .links{display:flex;gap:22px;align-items:center}.links a{text-decoration:none;color:var(--soft);font-size:14px;font-weight:650}.pill{border:1px solid var(--ink)!important;border-radius:999px;padding:9px 14px;color:var(--ink)!important}
+    .hero{padding:84px 0 74px}.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,.82fr);gap:56px;align-items:center}.eyebrow{font-size:12px;letter-spacing:.18em;font-weight:800;color:var(--teal)}h1,h2,h3{font-family:"Space Grotesk",Inter,system-ui,sans-serif;letter-spacing:-.04em}h1{font-size:clamp(52px,8vw,94px);line-height:.95;margin:16px 0 24px;max-width:10ch}h2{font-size:clamp(36px,5vw,58px);line-height:1.02;margin:12px 0 20px}.lead{font-size:clamp(18px,2vw,22px);color:var(--soft);max-width:64ch}
+    .cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}.cta a{text-decoration:none;font-weight:800;border-radius:999px;padding:13px 18px;border:1px solid var(--ink)}.cta .primary{background:var(--ink);color:var(--paper)}.cta .secondary{border-color:var(--line)}
+    .stage{position:relative;min-height:590px;border:1px solid var(--line);border-radius:34px;background:radial-gradient(circle at 50% 34%,#fff 0,#f7f0e5 52%,#e8dfd1 100%);overflow:hidden;box-shadow:0 30px 80px rgba(30,27,22,.11)}canvas{position:absolute;inset:0;width:100%;height:100%}.fallback{position:absolute;inset:0;display:grid;place-items:center;transition:opacity .35s}.fallback.hidden{opacity:0;pointer-events:none}.robot{width:260px;height:420px;position:relative;filter:drop-shadow(0 24px 18px rgba(30,27,22,.14))}.head{position:absolute;top:40px;left:57px;width:146px;height:136px;border-radius:48% 48% 44% 44%;background:#f4eddf;border:3px solid var(--ink)}.visor{position:absolute;left:24px;right:24px;top:48px;height:48px;background:var(--ink);border-radius:17px}.eye{position:absolute;top:11px;width:14px;height:26px;border-radius:12px;background:var(--copper);box-shadow:0 0 16px rgba(194,112,61,.5)}.eye.a{left:33px}.eye.b{right:33px}.torso{position:absolute;top:185px;left:51px;width:158px;height:150px;border-radius:28px;background:#f4eddf;border:3px solid var(--ink)}.badge{position:absolute;width:42px;height:42px;left:58px;top:48px;border-radius:11px;background:var(--teal);box-shadow:0 0 20px rgba(35,97,94,.23)}.limb{position:absolute;width:9px;background:var(--ink);border-radius:8px;transform-origin:top}.armL{left:52px;top:206px;height:126px;transform:rotate(14deg)}.armR{right:52px;top:206px;height:126px;transform:rotate(-15deg)}.legL{left:99px;top:329px;height:86px;transform:rotate(2deg)}.legR{right:99px;top:329px;height:86px;transform:rotate(-2deg)}.halo{position:absolute;top:0;left:31px;width:198px;height:198px;border:4px solid var(--copper);border-right-color:transparent;border-bottom-color:transparent;border-radius:50%;transform:rotate(20deg)}
+    .status{position:absolute;right:18px;bottom:18px;padding:9px 13px;border:1px solid var(--line);background:rgba(255,253,248,.88);border-radius:999px;font-size:12px;font-weight:800;color:var(--copper)}.proofbar{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--lift)}.proofgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:0}.proof{padding:24px;border-right:1px solid var(--line)}.proof:last-child{border-right:0}.proof b{display:block;font-size:25px;letter-spacing:-.04em}.proof span{font-size:12px;color:var(--soft);letter-spacing:.08em;text-transform:uppercase}
+    section{padding:100px 0}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.card{border:1px solid var(--line);border-radius:24px;background:var(--lift);padding:26px;min-height:210px}.card .n{font:800 12px/1 Inter,sans-serif;color:var(--copper);letter-spacing:.15em}.card h3{font-size:23px;margin:28px 0 9px}.card p{color:var(--soft);margin:0}.chain{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:44px}.node{border:1px solid var(--line);padding:18px 13px;border-radius:16px;background:var(--lift);font-size:13px;font-weight:800;text-align:center;position:relative}.node:not(:last-child):after{content:"→";position:absolute;right:-15px;top:16px;color:var(--copper);z-index:2}
+    .evidence{display:grid;grid-template-columns:1fr 1fr;gap:24px}.panel{border:1px solid var(--line);background:var(--ink);color:var(--paper);border-radius:28px;padding:32px}.panel p{color:#d9d2c8}.downloads{display:grid;gap:10px;margin-top:24px}.downloads a{display:flex;justify-content:space-between;text-decoration:none;border:1px solid #504b44;border-radius:15px;padding:14px 16px}.downloads small{color:#aaa39a}.truth{background:var(--deep);border-radius:28px;padding:32px;border:1px solid var(--line)}.truth ul{padding-left:20px;color:var(--soft)}code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.9em}
+    footer{padding:54px 0 70px;border-top:1px solid var(--line);color:var(--soft)}.footergrid{display:flex;justify-content:space-between;gap:30px;flex-wrap:wrap}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
+    @media(max-width:900px){.links a:not(.pill){display:none}.grid,.evidence{grid-template-columns:1fr}.stage{min-height:520px}.proofgrid{grid-template-columns:1fr 1fr}.proof:nth-child(2){border-right:0}.proof:nth-child(-n+2){border-bottom:1px solid var(--line)}.cards{grid-template-columns:1fr}.chain{grid-template-columns:1fr 1fr}.node:after{display:none}}
+    @media(max-width:520px){.hero{padding-top:54px}.wrap{width:min(100% - 24px,1180px)}.stage{min-height:460px}.proofgrid{grid-template-columns:1fr}.proof{border-right:0!important;border-bottom:1px solid var(--line)!important}.proof:last-child{border-bottom:0!important}.chain{grid-template-columns:1fr}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+  </style>
+</head>
+<body>
+  <nav class="nav"><div class="wrap navin">
+    <a class="brand" href="/"><span class="mark" aria-hidden="true"></span><span>STEWARD <span style="color:var(--soft);font-weight:600">by Aftergraph</span></span></a>
+    <div class="links"><a href="#system">System</a><a href="#evidence">Evidence</a><a href="/security/">Security</a><a class="pill" href="https://github.com/Aftergraph/STEWARD-by-Aftergraph">Source ↗</a></div>
+  </div></nav>
+
+  <main>
+    <section class="hero"><div class="wrap grid">
+      <div>
+        <div class="eyebrow">GOVERNED INTELLIGENT EXECUTION</div>
+        <h1 id="headline">Capability with custody.</h1>
+        <p class="lead" id="lede">STEWARD composes agent capability through bounded authority, durable work, runtime execution, evidence, and independent verification. Presence is visible. Truth stays with its canonical owner.</p>
+        <div class="cta"><a class="primary" href="#system">Inspect the system</a><a class="secondary" href="#evidence">Open evidence</a></div>
+      </div>
+      <div class="stage" id="stage" data-ready="false" data-model="loading" data-clips="">
+        <canvas id="three" aria-hidden="true"></canvas>
+        <div class="fallback" id="fallback" aria-hidden="true"><div class="robot"><div class="halo"></div><div class="head"><div class="visor"><i class="eye a"></i><i class="eye b"></i></div></div><div class="torso"><div class="badge"></div></div><div class="limb armL"></div><div class="limb armR"></div><div class="limb legL"></div><div class="limb legR"></div></div></div>
+        <div class="status" id="status">Loading verified rig</div>
+      </div>
+    </div></section>
+
+    <div class="proofbar"><div class="wrap proofgrid">
+      <div class="proof"><b>20</b><span>Rig bones</span></div>
+      <div class="proof"><b>3</b><span>Named clips</span></div>
+      <div class="proof"><b>23</b><span>Governed schemas</span></div>
+      <div class="proof"><b>0</b><span>Authority from UI</span></div>
+    </div></div>
+
+    <section id="system"><div class="wrap">
+      <div class="eyebrow">SYSTEM BOUNDARY</div><h2>The character is presence, not permission.</h2>
+      <p class="lead">STEWARD does not absorb the systems around it. AIE owns normative authority, Trust Gateway enforces policy, WORKS owns durable execution truth, Runtime owns lifecycle, and Sentinel independently verifies outcomes.</p>
+      <div class="chain"><div class="node">Mission</div><div class="node">Authority</div><div class="node">WORKS</div><div class="node">Runtime</div><div class="node">Evidence</div><div class="node">Verification</div></div>
+      <div class="cards" style="margin-top:36px">
+        <article class="card"><div class="n">01 · BOUNDED</div><h3>Authority stays external</h3><p>A visual pose cannot grant permission, expand scope, or bypass an authority lease.</p></article>
+        <article class="card"><div class="n">02 · DURABLE</div><h3>Work survives the agent</h3><p>Execution state belongs to durable work and runtime contracts rather than chat state or animation state.</p></article>
+        <article class="card"><div class="n">03 · VERIFIED</div><h3>Success needs evidence</h3><p><code>succeeded</code> is projection-valid only when backed by a Sentinel verification verdict.</p></article>
+      </div>
+    </div></section>
+
+    <section id="evidence"><div class="wrap evidence">
+      <div class="panel"><div class="eyebrow" style="color:#92c7c3">VERIFIED DISTRIBUTION</div><h2 style="font-size:40px">Inspect the exact rig.</h2><p>The public surface distributes the same checksum-bound GLB and evidence package used by the runtime. The export package also contains FBX and editable Blender source.</p>
+        <div class="downloads">
+          <a href="/assets/steward-rig-v1.glb" download><span>Rigged GLB</span><small>SHA 187819a9…</small></a>
+          <a href="/assets/steward-rig-v1.evidence.json"><span>Evidence JSON</span><small>machine-readable</small></a>
+          <a href="/assets/steward-rig-v1-verified-exports.zip" download><span>Verified export pack</span><small>SHA d10fc1d7…</small></a>
+        </div>
+      </div>
+      <div class="truth"><div class="eyebrow">PRESENCE PROJECTION/1.0</div><h2 style="font-size:40px">Fail closed by contract.</h2><ul><li><code>claim_class = projection-only</code></li><li><code>canonical_truth = false</code></li><li><code>authority_effect = false</code></li><li><code>verification_effect = false</code></li><li><code>succeeded</code> requires a verification verdict</li><li><code>verifying</code> is sourced from Sentinel, not agent self-report</li></ul><p><a href="https://github.com/Aftergraph/STEWARD-by-Aftergraph/blob/main/docs/18-PRESENCE-PROJECTION.md">Read the contract ↗</a></p></div>
+    </div></section>
+  </main>
+
+  <footer><div class="wrap footergrid"><div><strong>Aftergraph / STEWARD</strong><br>Infrastructure and open research for verifiable intelligent systems.</div><div class="mono">public-surface:v1 · verified-rig:v1</div></div></footer>
+
+  <script>
+    const q=new URLSearchParams(location.search),v=q.get('v');
+    const variants={a:['Capability with custody.','Agent capability composed through bounded authority, durable execution, evidence and independent verification.'],b:['Intelligence that can show its work.','STEWARD makes state visible without confusing interface presence with canonical truth.'],c:['Move fast. Keep the boundary.','A governed agent surface for execution that remains subordinate to authority, evidence and verification.']};
+    if(variants[v]){document.querySelector('#headline').textContent=variants[v][0];document.querySelector('#lede').textContent=variants[v][1]}
+  </script>
+  <script type="module">
+    const stage=document.querySelector('#stage'),fallback=document.querySelector('#fallback'),status=document.querySelector('#status'),canvas=document.querySelector('#three');
+    const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+    try{
+      const THREE=await import('https://esm.sh/three@0.180.0');
+      const {GLTFLoader}=await import('https://esm.sh/three@0.180.0/examples/jsm/loaders/GLTFLoader.js');
+      const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true,powerPreference:'high-performance'});
+      renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
+      const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(32,1,.1,100);camera.position.set(0,.18,6.2);
+      scene.add(new THREE.HemisphereLight(0xffffff,0x29313a,1.4));const key=new THREE.DirectionalLight(0xfff7ea,3);key.position.set(-3.2,5.2,4.6);scene.add(key);const fill=new THREE.DirectionalLight(0x9fe6df,1);fill.position.set(4.2,2,2.8);scene.add(fill);
+      const gltf=await new GLTFLoader().loadAsync('/assets/steward-rig-v1.glb');const names=gltf.animations.map(x=>x.name);for(const n of ['idle','blink','verify'])if(!names.includes(n))throw new Error('missing clip '+n);
+      const root=new THREE.Group();scene.add(root);const model=gltf.scene;root.add(model);model.updateMatrixWorld(true);const box=new THREE.Box3().setFromObject(model),size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3()),scale=3.65/Math.max(size.y,.001);model.scale.setScalar(scale);model.position.set(-center.x*scale,-center.y*scale-.05,-center.z*scale);
+      const mixer=new THREE.AnimationMixer(model),by=new Map(gltf.animations.map(c=>[c.name,c])),idle=mixer.clipAction(by.get('idle')),blink=mixer.clipAction(by.get('blink')),verify=mixer.clipAction(by.get('verify'));idle.setLoop(THREE.LoopRepeat,Infinity);blink.setLoop(THREE.LoopOnce,1);verify.setLoop(THREE.LoopOnce,1);if(!reduced)idle.play();
+      function resize(){const r=stage.getBoundingClientRect();renderer.setSize(r.width,r.height,false);camera.aspect=r.width/r.height;camera.updateProjectionMatrix()}new ResizeObserver(resize).observe(stage);resize();
+      let px=0,py=0,nextBlink=3.8,prev='';stage.addEventListener('pointermove',e=>{const r=stage.getBoundingClientRect();px=((e.clientX-r.left)/r.width-.5)*2;py=((e.clientY-r.top)/r.height-.5)*2});
+      const clock=new THREE.Clock();stage.dataset.ready='true';stage.dataset.model='verified-rig-glb';stage.dataset.clips=names.join(',');fallback.classList.add('hidden');status.textContent='Verified rig · '+names.join(' · ');
+      function frame(){const d=Math.min(clock.getDelta(),.05),t=clock.elapsedTime,phase=t%10<6?'idle':t%10<9?'verifying':'succeeded';if(!reduced){mixer.update(d);if(t>=nextBlink&&phase!=='verifying'){blink.reset().play();nextBlink=t+4.4}if(phase==='verifying'&&prev!=='verifying')verify.reset().play();root.rotation.y+=(px*.1-root.rotation.y)*.045;root.rotation.x+=(-py*.035-root.rotation.x)*.045;root.position.y=Math.sin(t*.8)*.025}prev=phase;renderer.render(scene,camera);requestAnimationFrame(frame)}frame();
+    }catch(err){console.error(err);stage.dataset.model='fallback-2d';status.textContent='Static governed presence';}
+  </script>
+</body></html>
