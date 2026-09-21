@@ -1,0 +1,14 @@
+{
+  "schema_version": "steward.delegated-authority/1.0",
+  "grant_id": "grant-merge-agent-001",
+  "grantee_persona_id": "persona-merge-agent-v1",
+  "authority_source": {
+    "owner": "aie",
+    "grant_ref": "aie:grant/org-aftergraph/repo-steward/merge-window-001"
+  },
+  "capabilities": ["repo:read", "repo:write", "pr:merge"],
+  "parent_capabilities": ["repo:read", "repo:write", "pr:create", "pr:merge", "repo:admin"],
+  "granted_at": "2026-09-21T08:00:00Z",
+  "expires_at": "2026-09-28T08:00:00Z",
+  "status": "granted"
+}
