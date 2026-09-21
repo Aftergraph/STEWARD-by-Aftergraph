@@ -1,6 +1,6 @@
 {
-  "schema_version": "steward.visual-frontier-profile/1.1",
-  "profile_id": "steward-frontier-rev5-2026-09-21",
+  "schema_version": "steward.visual-frontier-profile/1.2",
+  "profile_id": "steward-frontier-rev5-compact-2026-09-21",
   "identity_owner": "Aftergraph/brand",
   "renderer_owner": "Aftergraph/STEWARD-by-Aftergraph",
   "source_scene": {
@@ -20,10 +20,19 @@
     "asset_path": "/assets/steward-rig-v2.glb",
     "asset_sha256": "018fb057659975d67a3f6de3dc90a5167bc046d3bf366e3c0a9fe6ec96ecf6a8",
     "source_commit": "a25fa626979b3f938e9cec232cbaef52771e9db3",
-    "required_clips": ["idle", "blink", "verify"],
+    "required_clips": [
+      "idle",
+      "blink",
+      "verify"
+    ],
     "material_profile": "frontier-material/1.1",
     "proportion_profile": "frontier-proportions/1.0",
-    "portable_lighting": ["SUN", "POINT", "SPOT", "POINT"]
+    "portable_lighting": [
+      "SUN",
+      "POINT",
+      "SPOT",
+      "POINT"
+    ]
   },
   "state_assets": {
     "schema_version": "steward.rig-state-assets/4.0",
@@ -54,5 +63,19 @@
     "canonical_truth": false,
     "authority_effect": false,
     "verification_effect": false
+  },
+  "compact_presence": {
+    "schema_version": "steward.compact-presence-assets/1.0",
+    "manifest_path": "/assets/compact-presence/manifest-v1.json",
+    "source_revision": 5,
+    "source_commit": "04b075c2ba609c08e8a39ca1936badc3c6153911",
+    "proportion_profile": "frontier-proportions/1.0",
+    "material_profile": "frontier-material/1.1",
+    "states": [
+      "idle",
+      "verifying",
+      "succeeded"
+    ],
+    "geometry_unchanged": true
   }
 }
