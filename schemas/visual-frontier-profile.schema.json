@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aftergraph.org/schemas/steward-visual-frontier-profile-1.0.json",
+  "title": "STEWARD Visual Frontier Profile 1.0",
+  "description": "Renderer/evidence profile for STEWARD presence. It is presentation-only and does not own brand identity, authority, execution truth, or verification truth.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "profile_id",
+    "identity_owner",
+    "renderer_owner",
+    "source_scene",
+    "runtime",
+    "state_assets",
+    "presentation_boundary"
+  ],
+  "properties": {
+    "schema_version": { "const": "steward.visual-frontier-profile/1.0" },
+    "profile_id": { "type": "string", "minLength": 1 },
+    "identity_owner": { "const": "Aftergraph/brand" },
+    "renderer_owner": { "const": "Aftergraph/STEWARD-by-Aftergraph" },
+    "source_scene": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "project_id", "revision", "armature", "bone_count", "geometry_changed"],
+      "properties": {
+        "provider": { "const": "higgsfield-3d-jutsu" },
+        "project_id": { "type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+        "revision": { "type": "integer", "minimum": 1 },
+        "armature": { "const": "STEWARD_Rig" },
+        "bone_count": { "type": "integer", "minimum": 1 },
+        "geometry_changed": { "const": false }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["primary_renderer", "verified_model", "required_clips", "material_profile", "portable_lighting"],
+      "properties": {
+        "primary_renderer": { "const": "webgl-threejs" },
+        "verified_model": { "const": "verified-rig-glb" },
+        "required_clips": {
+          "type": "array",
+          "uniqueItems": true,
+          "minItems": 3,
+          "items": { "type": "string" },
+          "allOf": [
+            { "contains": { "const": "idle" } },
+            { "contains": { "const": "blink" } },
+            { "contains": { "const": "verify" } }
+          ]
+        },
+        "material_profile": { "const": "frontier-material/1.1" },
+        "portable_lighting": {
+          "type": "array",
+          "minItems": 4,
+          "items": { "enum": ["SUN", "POINT", "SPOT"] },
+          "allOf": [
+            { "contains": { "const": "SUN" } },
+            { "contains": { "const": "POINT" } },
+            { "contains": { "const": "SPOT" } }
+          ]
+        }
+      }
+    },
+    "state_assets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "source_revision", "states", "transparent", "geometry_unchanged"],
+      "properties": {
+        "schema_version": { "const": "steward.rig-state-assets/3.0" },
+        "source_revision": { "type": "integer", "minimum": 1 },
+        "states": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": ["idle", "thinking", "planning", "executing", "verifying", "succeeded"]
+          },
+          "minItems": 6,
+          "maxItems": 6
+        },
+        "transparent": { "const": true },
+        "geometry_unchanged": { "const": true }
+      }
+    },
+    "presentation_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["claim_class", "canonical_truth", "authority_effect", "verification_effect"],
+      "properties": {
+        "claim_class": { "const": "projection-only" },
+        "canonical_truth": { "const": false },
+        "authority_effect": { "const": false },
+        "verification_effect": { "const": false }
+      }
+    }
+  }
+}
