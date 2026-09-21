@@ -384,4 +384,142 @@ const deps = {
       repository: targetRepo,
       git_sha: shaB,
       verification_subject: 'git:' + targetRepo + '@' + shaB,
-      sentinel_a_head: sentinelA.
+      sentinel_a_head: sentinelA.review.headSha,
+      sentinel_a_verdict: sentinelA.verdict.decision,
+      sentinel_b_head: sentinelB.review.headSha,
+      sentinel_b_verdict: sentinelB.verdict.decision,
+      sentinel_b_receipt_id: sentinelB.receipt.receipt_id,
+      credential_surrogation: true,
+      remote_readback: true,
+      revocation_fail_closed: true,
+      transport_calls_after_revocation: transportCalls,
+    }) + '\n');
+  } finally {
+    try { db.close(); } catch {}
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+})().catch((err) => {
+  console.error(err && err.stack ? err.stack : String(err));
+  process.exitCode = 1;
+});
+NODEEOF
+
+cat > "$proof_test" <<'GOEOF'
+package api_test
+
+import (
+	"bytes"
+	"encoding/json"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"testing"
+)
+
+type remoteRuntimeDispatch struct {
+	OK bool `json:"ok"`
+	Receipt struct {
+		WorksExecutionID   string `json:"worksExecutionId"`
+		ExecutionContextID string `json:"executionContextId"`
+		TraceID            string `json:"traceId"`
+		WorkID             string `json:"workId"`
+	} `json:"receipt"`
+}
+
+type remoteEffectProof struct {
+	OK                      bool   `json:"ok"`
+	ExecutionContextID      string `json:"execution_context_id"`
+	AuthorityLeaseID        string `json:"authority_lease_id"`
+	ExecutionPDRID          string `json:"execution_pdr_id"`
+	WorksCorrelation        string `json:"works_correlation"`
+	AIERevalidationEvidence int    `json:"aie_revalidation_evidence"`
+	Repository              string `json:"repository"`
+	GitSHA                  string `json:"git_sha"`
+	VerificationSubject     string `json:"verification_subject"`
+	SentinelAHead           string `json:"sentinel_a_head"`
+	SentinelAVerdict        string `json:"sentinel_a_verdict"`
+	SentinelBHead           string `json:"sentinel_b_head"`
+	SentinelBVerdict        string `json:"sentinel_b_verdict"`
+	SentinelBReceiptID      string `json:"sentinel_b_receipt_id"`
+	CredentialSurrogation   bool   `json:"credential_surrogation"`
+	RemoteReadback          bool   `json:"remote_readback"`
+	RevocationFailClosed    bool   `json:"revocation_fail_closed"`
+	TransportCallsAfterRevocation int `json:"transport_calls_after_revocation"`
+}
+
+type remoteBindResult struct {
+	OK bool `json:"ok"`
+	Receipt struct {
+		Subject string `json:"subject"`
+	} `json:"receipt"`
+}
+
+func TestStewardRemoteSameCausalP2(t *testing.T) {
+	runtimeCLI := os.Getenv("STEWARD_RUNTIME_DISPATCH_CLI")
+	bindCLI := os.Getenv("STEWARD_RUNTIME_BIND_CLI")
+	nodeHarness := os.Getenv("STEWARD_REMOTE_NODE_HARNESS")
+	tgRoot := os.Getenv("STEWARD_TG_ROOT")
+	aieRoot := os.Getenv("STEWARD_AIE_ROOT")
+	stewardRoot := os.Getenv("STEWARD_CURRENT_ROOT")
+	if runtimeCLI == "" || bindCLI == "" || nodeHarness == "" || tgRoot == "" || aieRoot == "" || stewardRoot == "" {
+		t.Fatal("proof paths missing")
+	}
+
+	base, workID, leaseID := setupDispatchV2Work(t)
+	dispatchReq := map[string]any{
+		"workId": workID,
+		"organizationId": "org_11111111111111111111111111111111",
+		"tenantId": "ten_22222222222222222222222222222222",
+		"principalId": "prn_33333333333333333333333333333333",
+		"missionId": "mis_example",
+		"authorityLeaseId": "auth_44444444444444444444444444444444",
+		"workerLeaseId": leaseID,
+		"admissionDecisionId": "pdr_55555555555555555555555555555555",
+		"attemptId": "attempt/tg-aie/remote-1",
+		"effectId": "effect/tg-aie/remote-1",
+		"idempotencyKey": "idem/p2/tg-aie/remote-1",
+		"budgetRef": "budget/1",
+		"budgetCeiling": 100,
+		"checkpointId": "checkpoint/tg-aie/remote-1",
+		"evidenceRoot": "evidence/tg-aie/remote-1",
+		"causalId": "causal/tg-aie/remote-1",
+	}
+	raw, _ := json.Marshal(dispatchReq)
+	cmd := exec.Command("node", runtimeCLI)
+	cmd.Env = append(os.Environ(),
+		"WORKS_BASE_URL="+base,
+		"WORKS_BEARER_TOKEN="+dispatchV2PlatformToken,
+		"WORKS_PLATFORM_BRIDGE_SECRET="+dispatchV2BridgeSecret,
+	)
+	cmd.Stdin = bytes.NewReader(raw)
+	out, err := cmd.CombinedOutput()
+	if err != nil { t.Fatalf("Runtime dispatch failed: %v output=%s", err, out) }
+
+	var dispatch remoteRuntimeDispatch
+	if err := json.Unmarshal(out, &dispatch); err != nil { t.Fatal(err) }
+	if !dispatch.OK || dispatch.Receipt.ExecutionContextID == "" || dispatch.Receipt.WorkID != workID {
+		t.Fatalf("bad Runtime receipt: %+v", dispatch)
+	}
+
+	proofDir := t.TempDir()
+	stateFile := filepath.Join(proofDir, "aie-state.db")
+	actionID := "act_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+	tgInput := map[string]any{
+		"actionId": actionID,
+		"executionContextId": dispatch.Receipt.ExecutionContextID,
+		"organizationId": dispatchReq["organizationId"],
+		"tenantId": dispatchReq["tenantId"],
+		"principalId": dispatchReq["principalId"],
+		"missionId": dispatchReq["missionId"],
+		"authorityLeaseId": dispatchReq["authorityLeaseId"],
+		"effectId": dispatchReq["effectId"],
+	}
+	inputRaw, _ := json.Marshal(tgInput)
+
+	tgCmd := exec.Command("node", nodeHarness)
+	tgCmd.Env = append(os.Environ(),
+		"WORKS_API_URL="+base,
+		"WORKS_API_TOKEN="+dispatchV2PlatformToken,
+		"WORKS_PLATFORM_BRIDGE_SECRET="+dispatchV2BridgeSecret,
+		"AI
