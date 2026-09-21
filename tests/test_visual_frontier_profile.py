@@ -6,6 +6,36 @@ from jsonschema import Draft202012Validator, FormatChecker
 
 ROOT = Path(__file__).resolve().parents[1]
 
+EXPECTED_MOTIONS = {
+    "idle": "ambient_breathe",
+    "thinking": "visor_attention",
+    "planning": "ordered_scan",
+    "executing": "forward_action",
+    "inspecting": "focus_scan",
+    "waiting": "slow_hold",
+    "blocked": "boundary_stop",
+    "approval": "attention_gate",
+    "verifying": "custody_ring_raise",
+    "approving": "bounded_confirm",
+    "succeeded": "settled_confirm",
+    "failed": "bounded_break",
+}
+
+EXPECTED_ACCENTS = {
+    "idle": "steward_copper",
+    "thinking": "steward_copper",
+    "planning": "system_blue",
+    "executing": "decision_amber",
+    "inspecting": "control_cyan",
+    "waiting": "slate",
+    "blocked": "decision_amber",
+    "approval": "authority_violet",
+    "verifying": "pine_teal",
+    "approving": "authority_violet",
+    "succeeded": "moss",
+    "failed": "decision_amber",
+}
+
 
 class VisualFrontierProfileTests(unittest.TestCase):
     def _read(self, path):
@@ -49,6 +79,7 @@ class VisualFrontierProfileTests(unittest.TestCase):
         presence_schema = self._read("schemas/presence-projection.schema.json")
         canonical_states = presence_schema["properties"]["displayed_state"]["enum"]
         self.assertEqual(canonical_states, profile["state_assets"]["states"])
+        self.assertEqual(canonical_states, profile["motion_runtime"]["states"])
 
     def test_state_pack_is_revision_5_and_full_vocabulary(self):
         profile = self._read("fixtures/valid/visual-frontier-profile.json")
@@ -67,21 +98,46 @@ class VisualFrontierProfileTests(unittest.TestCase):
         self.assertEqual("steward.compact-presence-assets/1.0", compact["schema_version"])
         self.assertEqual("/assets/compact-presence/manifest-v1.json", compact["manifest_path"])
         self.assertEqual(5, compact["source_revision"])
-        self.assertEqual(
-            "04b075c2ba609c08e8a39ca1936badc3c6153911",
-            compact["source_commit"],
-        )
+        self.assertEqual("04b075c2ba609c08e8a39ca1936badc3c6153911", compact["source_commit"])
         self.assertEqual(["idle", "verifying", "succeeded"], compact["states"])
         self.assertTrue(set(compact["states"]) <= canonical_states)
-        self.assertEqual(
-            profile["source_scene"]["proportion_profile"],
-            compact["proportion_profile"],
-        )
-        self.assertEqual(
-            profile["source_scene"]["material_profile"],
-            compact["material_profile"],
-        )
+        self.assertEqual(profile["source_scene"]["proportion_profile"], compact["proportion_profile"])
+        self.assertEqual(profile["source_scene"]["material_profile"], compact["material_profile"])
         self.assertTrue(compact["geometry_unchanged"])
+
+    def test_motion_runtime_is_exactly_bound_to_brand_contract(self):
+        profile = self._read("fixtures/valid/visual-frontier-profile.json")
+        motion = profile["motion_runtime"]
+        self.assertEqual("Aftergraph/brand", motion["contract_owner"])
+        self.assertEqual("steward.presence.v1", motion["contract_id"])
+        self.assertEqual("steward.motion-runtime/2.0", motion["runtime_version"])
+        self.assertEqual("/assets/motion/presence-runtime-v2.json", motion["manifest_path"])
+        self.assertEqual(
+            "047464f20b75763d14d969fbb14fa16780a7d6dfdb554cb3a90e9e8809e92378",
+            motion["manifest_sha256"],
+        )
+        self.assertEqual("4c71ce1322281056c70dd896abefc03936fd43f6", motion["source_commit"])
+        self.assertEqual(EXPECTED_MOTIONS, motion["motions"])
+        self.assertEqual(EXPECTED_ACCENTS, motion["accent_tokens"])
+
+    def test_motion_runtime_respects_brand_bounds_and_reduced_motion(self):
+        motion = self._read("fixtures/valid/visual-frontier-profile.json")["motion_runtime"]
+        self.assertEqual((160, 420), (motion["transition_ms_min"], motion["transition_ms_max"]))
+        self.assertEqual((3.5, 5.5), (motion["blink_seconds_min"], motion["blink_seconds_max"]))
+        self.assertEqual(6, motion["pointer_orientation_max_degrees"])
+        self.assertEqual(
+            {
+                "continuous_motion": False,
+                "transition_ms": 0,
+                "preserve_state_label": True,
+                "preserve_final_pose": True,
+            },
+            motion["reduced_motion"],
+        )
+
+    def test_motion_runtime_qa_evidence_is_complete(self):
+        qa = self._read("fixtures/valid/visual-frontier-profile.json")["motion_runtime"]["qa"]
+        self.assertTrue(all(qa.values()))
 
 
 if __name__ == "__main__":
