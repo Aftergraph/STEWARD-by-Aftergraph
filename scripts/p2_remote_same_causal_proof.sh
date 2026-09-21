@@ -528,6 +528,7 @@ func TestStewardRemoteSameCausalP2(t *testing.T) {
 		"STEWARD_TG_ROOT="+tgRoot,
 		"STEWARD_AIE_ROOT="+aieRoot,
 		"STEWARD_AIE_STATE="+stateFile,
+		"STEWARD_SENTINEL_ROOT="+os.Getenv("STEWARD_SENTINEL_ROOT"),
 		"STEWARD_TG_INPUT="+string(inputRaw),
 	)
 	tgOut, err := tgCmd.CombinedOutput()
@@ -628,6 +629,7 @@ GOEOF
   STEWARD_REMOTE_NODE_HARNESS="$proof_root/remote_effect_harness.js" \
   STEWARD_TG_ROOT="$tg_root" \
   STEWARD_AIE_ROOT="$aie_root" \
+  STEWARD_SENTINEL_ROOT="$sentinel_root" \
   STEWARD_CURRENT_ROOT="$steward_root" \
   go test ./services/api -run '^TestStewardRemoteSameCausalP2$' -count=1 -v
 )
