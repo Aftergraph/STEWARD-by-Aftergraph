@@ -10,7 +10,7 @@ At capture time:
 | Owner | Review | Exact candidate | State |
 | --- | --- | --- | --- |
 | WORKS | `Aftergraph/works-execution#127` | `64cabe65bf210b2c65b525750acb45fc6d53894d` | open |
-| Runtime | `Aftergraph/runtime#195` | `0dac1f4194adb50d5b49d4648e47fb956b352106` | open |
+| Runtime | `Aftergraph/runtime#195` | `d9c5efb3a74222326ec71b06d5c2df2d4215d68f` | open |
 | Governance | `Aftergraph/after-graph-governance#185` | issue disposition pending | open |
 
 The CI job checks out the exact WORKS candidate and runs the owner-backed
