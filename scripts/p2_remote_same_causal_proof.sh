@@ -829,5 +829,30 @@ GOEOF
   go test ./services/api -run '^TestStewardRemoteSameCausalP2$' -count=1 -v
 )
 
-printf '{"schema":"steward.p2.remote-same-causal/0.1","runtime_head":"%s","works_head":"%s","trust_gateway_head":"%s","aie_head":"%s","sentinel_head":"%s","runtime_to_works":"PASS","tg_v21":"PASS","aie_action_time_revalidation":"PASS","works_pdr_correlation":"PASS","governed_remote_git_egress":"PASS","credential_surrogation":"PASS","remote_exact_sha_readback":"PASS","post_effect_subject_binding":"PASS","current_subject_sentinel_ship":"PASS","revocation_fail_closed":"PASS","same_causal_owner_acceptance_readiness":"PASS","isolated_worktree_binding":"PASS","canonical_works_mission_acceptance":"PASS","durable_verified_readback":"PASS","wrong_pdr_fail_closed":"PASS","stale_subject_fail_closed":"PASS","production_deployment":"absent"}\n' \
-  "$expected_runtime" "$expected_works" "$expected_tg" "$expected_aie" "$expected_sentinel"
+# --- C: derive production_deployment + canonical acceptance from LIVE exact readback ---
+# Never hardcoded. The proof runs on the same VDS host as the deployed gateway, so
+# 127.0.0.1:8800 is reachable. Read back the commit the gateway self-reports
+# (trust-gateway #130) and compare it to the proved TG subject. STEWARD
+# mission-acceptance.v0.1 forbids an ACCEPTED decision whose production reality is
+# unobserved; WORKS' legal word for that is INDETERMINATE. PASS only when the live
+# deployed_commit equals the proved subject; otherwise INDETERMINATE with the
+# observed reality recorded.
+TG_HEALTH_URL="${STEWARD_TG_HEALTH_URL:-http://127.0.0.1:8800/healthz}"
+_deployed_commit=""
+if command -v curl >/dev/null 2>&1; then
+  _deployed_commit="$(curl -fsS --max-time 3 "$TG_HEALTH_URL" 2>/dev/null \
+    | python3 -c 'import sys,json;print(json.load(sys.stdin).get("deployed_commit") or "")' 2>/dev/null || true)"
+fi
+if [[ "$_deployed_commit" =~ ^[0-9a-f]{40}$ ]] && [[ "$_deployed_commit" == "$expected_tg" ]]; then
+  mission_acceptance="PASS"
+  production_deployment='{"observed":true,"proved_subject_deployed":true,"deployed_commit":"'"$_deployed_commit"'","proved_subject":"'"$expected_tg"'"}'
+elif [[ "$_deployed_commit" =~ ^[0-9a-f]{40}$ ]]; then
+  mission_acceptance="INDETERMINATE"
+  production_deployment='{"observed":true,"proved_subject_deployed":false,"deployed_commit":"'"$_deployed_commit"'","proved_subject":"'"$expected_tg"'"}'
+else
+  mission_acceptance="INDETERMINATE"
+  production_deployment='{"observed":false,"proved_subject_deployed":false,"deployed_commit":null,"proved_subject":"'"$expected_tg"'"}'
+fi
+
+printf '{"schema":"steward.p2.remote-same-causal/0.1","runtime_head":"%s","works_head":"%s","trust_gateway_head":"%s","aie_head":"%s","sentinel_head":"%s","runtime_to_works":"PASS","tg_v21":"PASS","aie_action_time_revalidation":"PASS","works_pdr_correlation":"PASS","governed_remote_git_egress":"PASS","credential_surrogation":"PASS","remote_exact_sha_readback":"PASS","post_effect_subject_binding":"PASS","current_subject_sentinel_ship":"PASS","revocation_fail_closed":"PASS","same_causal_owner_acceptance_readiness":"PASS","isolated_worktree_binding":"PASS","canonical_works_mission_acceptance":"%s","durable_verified_readback":"PASS","wrong_pdr_fail_closed":"PASS","stale_subject_fail_closed":"PASS","production_deployment":%s}\n' \
+  "$expected_runtime" "$expected_works" "$expected_tg" "$expected_aie" "$expected_sentinel" "$mission_acceptance" "$production_deployment"
