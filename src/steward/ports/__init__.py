@@ -16,6 +16,13 @@ from .trust_gateway import (
     TrustGatewayDeniedError,
     TrustGatewayUnavailableError,
 )
+from .sentinel import (
+    SentinelVerificationRequest,
+    SentinelVerificationProjection,
+    SentinelPort,
+    SentinelContractError,
+    SentinelUnavailableError,
+)
 
 __all__ = [
     "RuntimeDispatchRequest",
@@ -30,4 +37,9 @@ __all__ = [
     "TrustGatewayContractError",
     "TrustGatewayDeniedError",
     "TrustGatewayUnavailableError",
+    "SentinelVerificationRequest",
+    "SentinelVerificationProjection",
+    "SentinelPort",
+    "SentinelContractError",
+    "SentinelUnavailableError",
 ]
