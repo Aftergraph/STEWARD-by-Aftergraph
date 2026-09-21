@@ -1,0 +1,679 @@
+#!/usr/bin/env bash
+# P2 owner-backed cross-process gate:
+# Runtime -> WORKS execution-context -> Trust Gateway V2.1 -> AIE live
+# revalidation -> WORKS execution-PDR correlation, plus revocation fail-closed.
+#
+# Staging only: no production service or remote Git mutation. Sentinel is
+# executed as an independent exact-head process from its pinned owner checkout.
+set -euo pipefail
+
+runtime_root="${1:?usage: $0 RUNTIME_CHECKOUT WORKS_CHECKOUT TG_CHECKOUT AIE_CHECKOUT EXPECTED_RUNTIME_SHA EXPECTED_WORKS_SHA EXPECTED_TG_SHA EXPECTED_AIE_SHA}"
+works_root="${2:?usage: $0 RUNTIME_CHECKOUT WORKS_CHECKOUT TG_CHECKOUT AIE_CHECKOUT EXPECTED_RUNTIME_SHA EXPECTED_WORKS_SHA EXPECTED_TG_SHA EXPECTED_AIE_SHA}"
+tg_root="${3:?usage: $0 RUNTIME_CHECKOUT WORKS_CHECKOUT TG_CHECKOUT AIE_CHECKOUT EXPECTED_RUNTIME_SHA EXPECTED_WORKS_SHA EXPECTED_TG_SHA EXPECTED_AIE_SHA}"
+aie_root="${4:?usage: $0 RUNTIME_CHECKOUT WORKS_CHECKOUT TG_CHECKOUT AIE_CHECKOUT EXPECTED_RUNTIME_SHA EXPECTED_WORKS_SHA EXPECTED_TG_SHA EXPECTED_AIE_SHA}"
+expected_runtime="${5:?missing expected Runtime SHA}"
+expected_works="${6:?missing expected WORKS SHA}"
+expected_tg="${7:?missing expected Trust Gateway SHA}"
+expected_aie="${8:?missing expected AIE SHA}"
+sentinel_root="${9:?missing Sentinel checkout}"
+expected_sentinel="${10:?missing expected Sentinel SHA}"
+steward_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+for pair in \
+  "$runtime_root:$expected_runtime:Runtime" \
+  "$works_root:$expected_works:WORKS" \
+  "$tg_root:$expected_tg:Trust-Gateway" \
+  "$aie_root:$expected_aie:AIE" \
+  "$sentinel_root:$expected_sentinel:Sentinel"; do
+  root="${pair%%:*}"
+  rest="${pair#*:}"
+  expected="${rest%%:*}"
+  label="${rest##*:}"
+  actual="$(git -C "$root" rev-parse HEAD)"
+  [[ "$actual" == "$expected" ]] || {
+    echo "$label exact-head mismatch: got $actual want $expected" >&2
+    exit 1
+  }
+done
+
+for var in WORKS_API_URL WORKS_API_TOKEN WORKS_BASE_URL WORKS_BEARER_TOKEN \
+  WORKS_PLATFORM_BRIDGE_SECRET AIE_RUNTIME_PATH AIE_STATE_FILE \
+  STEWARD_TRUST_GATEWAY_URL STEWARD_TRUST_GATEWAY_TOKEN; do
+  if [[ -n "${!var:-}" ]]; then
+    echo "refusing staging proof with inherited external binding in $var" >&2
+    exit 1
+  fi
+done
+
+command -v node >/dev/null
+command -v python3 >/dev/null
+command -v go >/dev/null
+
+# Build the exact Runtime command if the prior cross-process proof has not
+# already done so in this checkout.
+dispatch_cli="$runtime_root/packages/runtime-host/dist/steward-dispatch-v2-cli.js"
+bind_cli="$runtime_root/packages/runtime-host/dist/steward-bind-subject-v2-cli.js"
+if [[ ! -s "$dispatch_cli" || ! -s "$bind_cli" ]]; then
+  pnpm_run() {
+    if command -v pnpm >/dev/null 2>&1; then
+      pnpm "$@"
+    elif command -v corepack >/dev/null 2>&1; then
+      corepack pnpm "$@"
+    elif command -v npx >/dev/null 2>&1; then
+      npx --yes pnpm@11.20.0 "$@"
+    else
+      echo "pnpm unavailable: no pnpm, corepack or npx" >&2
+      return 1
+    fi
+  }
+  (
+    cd "$runtime_root"
+    pnpm_run install --frozen-lockfile
+    pnpm_run --filter @aftergraph/runtime-host build
+  )
+fi
+[[ -s "$dispatch_cli" ]] || { echo "Runtime V2 dispatch CLI missing" >&2; exit 1; }
+[[ -s "$bind_cli" ]] || { echo "Runtime V2 subject-binding CLI missing" >&2; exit 1; }
+
+proof_root="$(mktemp -d "${RUNNER_TEMP:-/tmp}/steward-p2-tg-aie.XXXXXX")"
+proof_test="$works_root/services/api/steward_tg_aie_cross_process_test.go"
+cleanup() {
+  rm -f -- "$proof_test"
+  rm -rf -- "$proof_root"
+}
+trap cleanup EXIT
+
+cat > "$proof_root/tg_aie_harness.js" <<'NODEEOF'
+'use strict';
+
+const assert = require('node:assert/strict');
+const { spawnSync } = require('node:child_process');
+const fs = require('node:fs');
+const path = require('node:path');
+
+const tgRoot = process.env.STEWARD_TG_ROOT;
+const aieRoot = process.env.STEWARD_AIE_ROOT;
+const stateFile = process.env.STEWARD_AIE_STATE;
+const gitRepo = process.env.STEWARD_GIT_REPO;
+const sentinelRoot = process.env.STEWARD_SENTINEL_ROOT;
+if (!tgRoot || !aieRoot || !stateFile || !gitRepo || !sentinelRoot) {
+  throw new Error('proof roots/state/git/sentinel checkout missing');
+}
+
+const { authorizeV21Action } = require(path.join(tgRoot, 'src/gateway/platform-execution.js'));
+const { actionFingerprint } = require(path.join(tgRoot, 'src/gateway/aie-client.js'));
+
+const input = JSON.parse(process.env.STEWARD_TG_INPUT || '{}');
+const tool = 'fs.read:/data/file.txt';
+const botName = 'worker';
+const args = null;
+const digest = actionFingerprint({ bot: botName, tool, args });
+
+function py(script, argv = []) {
+  const out = spawnSync(process.env.AIE_PYTHON || 'python3', ['-c', script, ...argv], {
+    encoding: 'utf8',
+    env: process.env,
+    maxBuffer: 256 * 1024,
+  });
+  if (out.status !== 0) {
+    throw new Error(`python helper failed status=${out.status} stdout=${out.stdout} stderr=${out.stderr}`);
+  }
+  return (out.stdout || '').trim();
+}
+
+function run(command, argv = [], cwd = undefined) {
+  const out = spawnSync(command, argv, {
+    cwd,
+    encoding: 'utf8',
+    env: process.env,
+    maxBuffer: 256 * 1024,
+  });
+  if (out.status !== 0) {
+    throw new Error(`${command} failed status=${out.status} stdout=${out.stdout} stderr=${out.stderr}`);
+  }
+  return out;
+}
+
+function runInput(command, argv, cwd, inputText) {
+  const out = spawnSync(command, argv, {
+    cwd,
+    input: inputText,
+    encoding: 'utf8',
+    env: process.env,
+    maxBuffer: 2 * 1024 * 1024,
+  });
+  if (out.status !== 0) {
+    throw new Error(`${command} failed status=${out.status} stdout=${out.stdout} stderr=${out.stderr}`);
+  }
+  return out;
+}
+
+const seed = String.raw`
+import sys
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
+aie_root, db_path, action_id, principal_id, mission_id, authority_id, digest = sys.argv[1:]
+sys.path.insert(0, str(Path(aie_root) / "src"))
+from aie_runtime.engine import ActionRequest, AdmissionEngine, AuthorityLease, Mission, Principal
+from aie_runtime.persistent_state import PersistentState
+
+now = datetime.now(timezone.utc)
+state = PersistentState(db_path=db_path)
+state.principals[principal_id] = Principal(principal_id, "agent", "ref:steward-proof")
+state.missions[mission_id] = Mission(mission_id, "RUNNING")
+state.leases[authority_id] = AuthorityLease(
+    id=authority_id,
+    principal_id=principal_id,
+    mission_id=mission_id,
+    capabilities={"fs.read"},
+    resource_prefixes=("/data/",),
+    expires_at=now + timedelta(hours=1),
+    budget_remaining=10,
+    revoked=False,
+)
+engine = AdmissionEngine(state, policy=lambda _: True)
+engine.admit(ActionRequest(
+    action_id,
+    principal_id,
+    mission_id,
+    authority_id,
+    "fs.read",
+    "/data/file.txt",
+    0,
+    extensions=({"namespace":"urn:aftergraph:tg-action:v1","sha256":digest},),
+))
+state.save_all()
+state._conn.close()
+`;
+
+py(seed, [
+  aieRoot,
+  stateFile,
+  input.actionId,
+  input.principalId,
+  input.missionId,
+  input.authorityLeaseId,
+  digest,
+]);
+
+const pdrId = 'pdr_88888888888888888888888888888888';
+const deps = {
+  resolvePlatformIdentity: () => ({
+    status: 200,
+    body: {
+      organization_id: input.organizationId,
+      tenant_id: input.tenantId,
+      principal_id: input.principalId,
+    },
+  }),
+  createExecutionDecision: (record) => ({ id: pdrId, ...record }),
+};
+
+(async () => {
+  const allowed = await authorizeV21Action({
+    req: {},
+    gw: {},
+    body: {
+      action_id: input.actionId,
+      execution_context_id: input.executionContextId,
+      mission_id: input.missionId,
+    },
+    bot: { name: botName },
+    tool,
+    args,
+    deps,
+  });
+
+  assert.equal(allowed.legacy, false);
+  assert.equal(allowed.context.execution_context_id, input.executionContextId);
+  assert.equal(allowed.context.authority_lease_id, input.authorityLeaseId);
+  assert.equal(allowed.revalidation.action_id, input.actionId);
+  assert.equal(allowed.revalidation.authority_lease_id, input.authorityLeaseId);
+  assert.equal(allowed.pdr.id, pdrId);
+  assert.equal(allowed.correlation.ok, true);
+  assert.ok(['recorded', 'already_recorded'].includes(allowed.correlation.receipt.status));
+
+  const evidenceCount = Number(py(
+    "import sqlite3,sys; c=sqlite3.connect(sys.argv[1]); print(sum('action.revalidated' in r[0] for r in c.execute('SELECT data FROM evidence'))); c.close()",
+    [stateFile],
+  ));
+  assert.ok(evidenceCount >= 1, 'AIE action.revalidated evidence was not persisted');
+
+  // Staging Habitat/Git effect: real git CLI in an isolated local repository,
+  // only after TG/AIE authorization has returned successfully.
+  fs.mkdirSync(gitRepo, { recursive: true });
+  run('git', ['init', '-q'], gitRepo);
+  run('git', ['config', 'user.name', 'Aftergraph P2 Proof'], gitRepo);
+  run('git', ['config', 'user.email', 'p2-proof@aftergraph.invalid'], gitRepo);
+  fs.writeFileSync(path.join(gitRepo, 'candidate.txt'), 'authorized candidate\n', 'utf8');
+  run('git', ['add', 'candidate.txt'], gitRepo);
+  run('git', ['commit', '-q', '-m', 'test(p2): authorized candidate'], gitRepo);
+  const gitSha = run('git', ['rev-parse', 'HEAD'], gitRepo).stdout.trim();
+  assert.match(gitSha, /^[a-f0-9]{40}$/);
+  const verificationSubject = `git:Aftergraph/STEWARD-by-Aftergraph@${gitSha}`;
+
+  // Independent Sentinel process over the exact observed subject.
+  const sentinelCLI = path.join(sentinelRoot, 'bin/sentinel.js');
+  const diffA = run('git', ['show', '--format=', '--patch', 'HEAD'], gitRepo).stdout;
+  const sentinelAOut = runInput('node', [
+    sentinelCLI, 'review',
+    '--diff', '-',
+    '--repo', 'Aftergraph/STEWARD-by-Aftergraph',
+    '--head-sha', gitSha,
+    '--base-sha', '0000000000000000000000000000000000000000',
+    '--format', 'json',
+    '--source', 'works-control-plane',
+    '--no-ledger',
+  ], gitRepo, diffA);
+  const sentinelA = JSON.parse(sentinelAOut.stdout);
+  assert.equal(sentinelA.verdict.decision, 'SHIP');
+  assert.equal(sentinelA.verdict.headSha, gitSha);
+  assert.equal(sentinelA.receipt.contract, 'sentinel.receipt/0.1');
+  assert.equal(sentinelA.receipt.headSha, gitSha);
+  assert.equal(sentinelA.receipt.verdict, 'SHIP');
+  assert.match(sentinelA.receipt.receipt_id, /^[a-f0-9]{64}$/);
+
+  const receiptAPath = path.join(path.dirname(stateFile), 'sentinel-receipt-a.json');
+  fs.writeFileSync(receiptAPath, JSON.stringify(sentinelA.receipt), 'utf8');
+  const receiptCheck = run('node', [sentinelCLI, 'verify', '--receipt', receiptAPath], gitRepo);
+  assert.match(receiptCheck.stdout, /^VALID — /);
+
+  const revoke = String.raw`
+import sys
+from pathlib import Path
+aie_root, db_path, authority_id = sys.argv[1:]
+sys.path.insert(0, str(Path(aie_root) / "src"))
+from aie_runtime.persistent_state import PersistentState
+state = PersistentState(db_path=db_path)
+state.leases[authority_id].revoked = True
+state.save_all()
+state._conn.close()
+`;
+  py(revoke, [aieRoot, stateFile, input.authorityLeaseId]);
+
+  let revoked = false;
+  try {
+    await authorizeV21Action({
+      req: {},
+      gw: {},
+      body: {
+        action_id: input.actionId,
+        execution_context_id: input.executionContextId,
+        mission_id: input.missionId,
+      },
+      bot: { name: botName },
+      tool,
+      args,
+      deps,
+    });
+  } catch (err) {
+    revoked = err && err.code === 'authority_revoked';
+  }
+  assert.equal(revoked, true, 'revoked AIE authority did not fail closed before PDR');
+  const headAfterRevocation = run('git', ['rev-parse', 'HEAD'], gitRepo).stdout.trim();
+  assert.equal(headAfterRevocation, gitSha, 'revoked authorization changed Git subject');
+
+  process.stdout.write(JSON.stringify({
+    ok: true,
+    execution_context_id: input.executionContextId,
+    authority_lease_id: input.authorityLeaseId,
+    execution_pdr_id: pdrId,
+    works_correlation: allowed.correlation.receipt.status,
+    aie_revalidation_evidence: evidenceCount,
+    git_sha: gitSha,
+    verification_subject: verificationSubject,
+    sentinel_verdict: sentinelA.verdict.decision,
+    sentinel_receipt_id: sentinelA.receipt.receipt_id,
+    sentinel_exact_head: sentinelA.receipt.headSha,
+    sentinel_receipt_offline_valid: true,
+    revocation_fail_closed: true,
+  }) + '\n');
+})().catch((err) => {
+  console.error(err && err.stack ? err.stack : String(err));
+  process.exit(1);
+});
+NODEEOF
+
+cat > "$proof_test" <<'GOEOF'
+package api_test
+
+import (
+	"bytes"
+	"encoding/json"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"testing"
+)
+
+type stewardRuntimeDispatch struct {
+	OK bool `json:"ok"`
+	Receipt struct {
+		WorksExecutionID   string `json:"worksExecutionId"`
+		ExecutionContextID string `json:"executionContextId"`
+		TraceID            string `json:"traceId"`
+		WorkID             string `json:"workId"`
+	} `json:"receipt"`
+}
+
+type tgAIEProof struct {
+	OK                      bool   `json:"ok"`
+	ExecutionContextID      string `json:"execution_context_id"`
+	AuthorityLeaseID        string `json:"authority_lease_id"`
+	ExecutionPDRID          string `json:"execution_pdr_id"`
+	WorksCorrelation        string `json:"works_correlation"`
+	AIERevalidationEvidence int    `json:"aie_revalidation_evidence"`
+	GitSHA                      string `json:"git_sha"`
+	VerificationSubject         string `json:"verification_subject"`
+	SentinelVerdict             string `json:"sentinel_verdict"`
+	SentinelReceiptID           string `json:"sentinel_receipt_id"`
+	SentinelExactHead           string `json:"sentinel_exact_head"`
+	SentinelReceiptOfflineValid bool   `json:"sentinel_receipt_offline_valid"`
+	RevocationFailClosed        bool   `json:"revocation_fail_closed"`
+}
+
+type runtimeBindResult struct {
+	OK bool `json:"ok"`
+	Receipt struct {
+		Subject string `json:"subject"`
+	} `json:"receipt"`
+}
+
+type sentinelReviewJSON struct {
+	Verdict struct {
+		Decision string `json:"decision"`
+		HeadSHA  string `json:"headSha"`
+	} `json:"verdict"`
+	Receipt json.RawMessage `json:"receipt"`
+}
+
+type sentinelReceiptMeta struct {
+	Contract  string `json:"contract"`
+	HeadSHA   string `json:"headSha"`
+	Verdict   string `json:"verdict"`
+	ReceiptID string `json:"receipt_id"`
+}
+
+func TestStewardTGAIECrossProcessV21(t *testing.T) {
+	runtimeCLI := os.Getenv("STEWARD_RUNTIME_DISPATCH_CLI")
+	bindCLI := os.Getenv("STEWARD_RUNTIME_BIND_CLI")
+	nodeHarness := os.Getenv("STEWARD_TG_NODE_HARNESS")
+	tgRoot := os.Getenv("STEWARD_TG_ROOT")
+	aieRoot := os.Getenv("STEWARD_AIE_ROOT")
+	sentinelRoot := os.Getenv("STEWARD_SENTINEL_ROOT")
+	stewardRoot := os.Getenv("STEWARD_CURRENT_ROOT")
+	if runtimeCLI == "" || bindCLI == "" || nodeHarness == "" || tgRoot == "" || aieRoot == "" || sentinelRoot == "" || stewardRoot == "" {
+		t.Fatal("proof paths missing")
+	}
+
+	base, workID, leaseID := setupDispatchV2Work(t)
+	dispatchReq := map[string]any{
+		"workId": workID,
+		"organizationId": "org_11111111111111111111111111111111",
+		"tenantId": "ten_22222222222222222222222222222222",
+		"principalId": "prn_33333333333333333333333333333333",
+		"missionId": "mis_example",
+		"authorityLeaseId": "auth_44444444444444444444444444444444",
+		"workerLeaseId": leaseID,
+		"admissionDecisionId": "pdr_55555555555555555555555555555555",
+		"attemptId": "attempt/tg-aie/1",
+		"effectId": "effect/tg-aie/1",
+		"idempotencyKey": "idem/p2/tg-aie/1",
+		"budgetRef": "budget/1",
+		"budgetCeiling": 100,
+		"checkpointId": "checkpoint/tg-aie/1",
+		"evidenceRoot": "evidence/tg-aie/1",
+		"causalId": "causal/tg-aie/1",
+	}
+	raw, err := json.Marshal(dispatchReq)
+	if err != nil { t.Fatal(err) }
+
+	cmd := exec.Command("node", runtimeCLI)
+	cmd.Env = append(os.Environ(),
+		"WORKS_BASE_URL="+base,
+		"WORKS_BEARER_TOKEN="+dispatchV2PlatformToken,
+		"WORKS_PLATFORM_BRIDGE_SECRET="+dispatchV2BridgeSecret,
+	)
+	cmd.Stdin = bytes.NewReader(raw)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("Runtime dispatch failed: %v output=%s", err, out)
+	}
+	var dispatch stewardRuntimeDispatch
+	if err := json.Unmarshal(out, &dispatch); err != nil {
+		t.Fatalf("decode Runtime output: %v output=%s", err, out)
+	}
+	if !dispatch.OK || dispatch.Receipt.ExecutionContextID == "" || dispatch.Receipt.WorkID != workID {
+		t.Fatalf("bad Runtime receipt: %+v", dispatch)
+	}
+
+	proofDir := t.TempDir()
+	stateFile := filepath.Join(proofDir, "aie-state.db")
+	gitRepo := filepath.Join(proofDir, "git-candidate")
+	actionID := "act_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+	tgInput := map[string]any{
+		"actionId": actionID,
+		"executionContextId": dispatch.Receipt.ExecutionContextID,
+		"organizationId": dispatchReq["organizationId"],
+		"tenantId": dispatchReq["tenantId"],
+		"principalId": dispatchReq["principalId"],
+		"missionId": dispatchReq["missionId"],
+		"authorityLeaseId": dispatchReq["authorityLeaseId"],
+	}
+	inputRaw, _ := json.Marshal(tgInput)
+
+	tgCmd := exec.Command("node", nodeHarness)
+	tgCmd.Env = append(os.Environ(),
+		"WORKS_API_URL="+base,
+		"WORKS_API_TOKEN="+dispatchV2PlatformToken,
+		"WORKS_PLATFORM_BRIDGE_SECRET="+dispatchV2BridgeSecret,
+		"AIE_RUNTIME_PATH="+aieRoot,
+		"AIE_STATE_FILE="+stateFile,
+		"AIE_PYTHON=python3",
+		"STEWARD_TG_ROOT="+tgRoot,
+		"STEWARD_AIE_ROOT="+aieRoot,
+		"STEWARD_AIE_STATE="+stateFile,
+		"STEWARD_GIT_REPO="+gitRepo,
+		"STEWARD_SENTINEL_ROOT="+sentinelRoot,
+		"STEWARD_TG_INPUT="+string(inputRaw),
+	)
+	tgOut, err := tgCmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("TG/AIE proof failed: %v output=%s", err, tgOut)
+	}
+
+	lines := strings.Split(strings.TrimSpace(string(tgOut)), "\n")
+	var proof tgAIEProof
+	if err := json.Unmarshal([]byte(lines[len(lines)-1]), &proof); err != nil {
+		t.Fatalf("decode TG/AIE output: %v output=%s", err, tgOut)
+	}
+	if !proof.OK ||
+		proof.ExecutionContextID != dispatch.Receipt.ExecutionContextID ||
+		proof.AuthorityLeaseID != dispatchReq["authorityLeaseId"] ||
+		proof.ExecutionPDRID == "" ||
+		proof.AIERevalidationEvidence < 1 ||
+		proof.SentinelVerdict != "SHIP" ||
+		len(proof.SentinelReceiptID) != 64 ||
+		proof.SentinelExactHead != proof.GitSHA ||
+		!proof.SentinelReceiptOfflineValid ||
+		!proof.RevocationFailClosed {
+		t.Fatalf("incomplete TG/AIE proof: %+v", proof)
+	}
+	if proof.WorksCorrelation != "recorded" && proof.WorksCorrelation != "already_recorded" {
+		t.Fatalf("unexpected WORKS correlation: %q", proof.WorksCorrelation)
+	}
+	if len(proof.GitSHA) != 40 || proof.VerificationSubject != "git:Aftergraph/STEWARD-by-Aftergraph@"+proof.GitSHA {
+		t.Fatalf("invalid observed Git subject: %+v", proof)
+	}
+
+	bindReq := map[string]any{
+		"workId": workID,
+		"worksExecutionId": dispatch.Receipt.WorksExecutionID,
+		"attemptId": "attempt/tg-aie/1",
+		"effectId": "effect/tg-aie/1",
+		"causalId": "causal/tg-aie/1",
+		"subject": proof.VerificationSubject,
+	}
+	bindRaw, _ := json.Marshal(bindReq)
+	bindCmd := exec.Command("node", bindCLI)
+	bindCmd.Env = append(os.Environ(),
+		"WORKS_BASE_URL="+base,
+		"WORKS_BEARER_TOKEN="+dispatchV2PlatformToken,
+		"WORKS_PLATFORM_BRIDGE_SECRET="+dispatchV2BridgeSecret,
+	)
+	bindCmd.Stdin = bytes.NewReader(bindRaw)
+	bindOut, err := bindCmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("Runtime subject binding failed: %v output=%s", err, bindOut)
+	}
+	var bound runtimeBindResult
+	if err := json.Unmarshal(bindOut, &bound); err != nil {
+		t.Fatalf("decode Runtime subject binding: %v output=%s", err, bindOut)
+	}
+	if !bound.OK || bound.Receipt.Subject != proof.VerificationSubject {
+		t.Fatalf("subject binding mismatch: %+v output=%s", bound, bindOut)
+	}
+
+	// Produce a new exact subject B only after A has been verified and bound.
+	// The old Sentinel receipt for A must not satisfy B.
+	candidatePath := filepath.Join(gitRepo, "candidate.txt")
+	if err := os.WriteFile(candidatePath, []byte("authorized candidate\nnew subject B\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	for _, args := range [][]string{{"add", "candidate.txt"}, {"commit", "-q", "-m", "test(p2): new verification subject B"}} {
+		g := exec.Command("git", args...)
+		g.Dir = gitRepo
+		if out, err := g.CombinedOutput(); err != nil {
+			t.Fatalf("git %v failed: %v output=%s", args, err, out)
+		}
+	}
+	shaBCmd := exec.Command("git", "rev-parse", "HEAD")
+	shaBCmd.Dir = gitRepo
+	shaBOut, err := shaBCmd.Output()
+	if err != nil { t.Fatal(err) }
+	shaB := strings.TrimSpace(string(shaBOut))
+	if len(shaB) != 40 || shaB == proof.GitSHA {
+		t.Fatalf("invalid SHA B: A=%s B=%s", proof.GitSHA, shaB)
+	}
+
+	diffCmd := exec.Command("git", "show", "--format=", "--patch", "HEAD")
+	diffCmd.Dir = gitRepo
+	diffB, err := diffCmd.Output()
+	if err != nil { t.Fatal(err) }
+
+	sentinelCLI := filepath.Join(sentinelRoot, "bin", "sentinel.js")
+	sentinelCmd := exec.Command("node",
+		sentinelCLI, "review",
+		"--diff", "-",
+		"--repo", "Aftergraph/STEWARD-by-Aftergraph",
+		"--head-sha", shaB,
+		"--base-sha", proof.GitSHA,
+		"--format", "json",
+		"--source", "works-control-plane",
+		"--no-ledger",
+	)
+	sentinelCmd.Dir = gitRepo
+	sentinelCmd.Stdin = bytes.NewReader(diffB)
+	sentinelBOut, err := sentinelCmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("Sentinel B verification failed: %v output=%s", err, sentinelBOut)
+	}
+	var sentinelB sentinelReviewJSON
+	if err := json.Unmarshal(sentinelBOut, &sentinelB); err != nil {
+		t.Fatalf("decode Sentinel B: %v output=%s", err, sentinelBOut)
+	}
+	var receiptB sentinelReceiptMeta
+	if err := json.Unmarshal(sentinelB.Receipt, &receiptB); err != nil {
+		t.Fatalf("decode Sentinel B receipt: %v", err)
+	}
+	if sentinelB.Verdict.Decision != "SHIP" || sentinelB.Verdict.HeadSHA != shaB ||
+		receiptB.Contract != "sentinel.receipt/0.1" || receiptB.HeadSHA != shaB ||
+		receiptB.Verdict != "SHIP" || len(receiptB.ReceiptID) != 64 ||
+		receiptB.ReceiptID == proof.SentinelReceiptID {
+		t.Fatalf("bad Sentinel B exact-subject result: verdict=%+v receipt=%+v", sentinelB.Verdict, receiptB)
+	}
+
+	receiptBPath := filepath.Join(proofDir, "sentinel-receipt-b.json")
+	if err := os.WriteFile(receiptBPath, sentinelB.Receipt, 0o600); err != nil { t.Fatal(err) }
+	verifyB := exec.Command("node", sentinelCLI, "verify", "--receipt", receiptBPath)
+	verifyB.Dir = gitRepo
+	if out, err := verifyB.CombinedOutput(); err != nil {
+		t.Fatalf("Sentinel B offline receipt verification failed: %v output=%s", err, out)
+	}
+
+	// Exercise STEWARD's actual Sentinel exact-subject projection. A is valid
+	// for A, rejected as a response to B, and cannot satisfy B. B can satisfy B.
+	projection := `
+import json, sys
+from pathlib import Path
+root, sha_a, rid_a, sha_b, rid_b = sys.argv[1:]
+sys.path.insert(0, str(Path(root) / "src"))
+from steward.ports.sentinel import (
+    SentinelContractError,
+    SentinelVerificationProjection,
+    SentinelVerificationRequest,
+)
+repo = "Aftergraph/STEWARD-by-Aftergraph"
+payload_a = {
+    "repository": repo,
+    "headSha": sha_a,
+    "verdict": "SHIP",
+    "receipt_id": rid_a,
+    "evidenceRefs": ["sentinel.receipt:" + rid_a],
+}
+req_a = SentinelVerificationRequest(repository=repo, head_sha=sha_a)
+proj_a = SentinelVerificationProjection.from_wire(req_a, payload_a)
+assert proj_a.satisfies(sha_a)
+assert not proj_a.satisfies(sha_b)
+try:
+    SentinelVerificationProjection.from_wire(
+        SentinelVerificationRequest(repository=repo, head_sha=sha_b),
+        payload_a,
+    )
+except SentinelContractError:
+    pass
+else:
+    raise AssertionError("Sentinel A payload was accepted for current subject B")
+payload_b = {
+    "repository": repo,
+    "headSha": sha_b,
+    "verdict": "SHIP",
+    "receipt_id": rid_b,
+    "evidenceRefs": ["sentinel.receipt:" + rid_b],
+}
+proj_b = SentinelVerificationProjection.from_wire(
+    SentinelVerificationRequest(repository=repo, head_sha=sha_b),
+    payload_b,
+)
+assert proj_b.satisfies(sha_b)
+print(json.dumps({"ok": True, "stale_a_for_b": True, "current_b_ship": True}))
+`
+	projectionCmd := exec.Command("python3", "-c", projection, stewardRoot, proof.GitSHA, proof.SentinelReceiptID, shaB, receiptB.ReceiptID)
+	projectionOut, err := projectionCmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("STEWARD Sentinel projection failed: %v output=%s", err, projectionOut)
+	}
+	if !strings.Contains(string(projectionOut), `"stale_a_for_b": true`) {
+		t.Fatalf("missing stale-subject proof: %s", projectionOut)
+	}
+
+	t.Logf("P2 chain A=%s B=%s sentinelA=%s sentinelB=%s subject=%s", proof.GitSHA, shaB, proof.SentinelReceiptID, receiptB.ReceiptID, proof.VerificationSubject)
+}
+GOEOF
+
+(
+  cd "$works_root"
+  STEWARD_RUNTIME_DISPATCH_CLI="$dispatch_cli" \
+  STEWARD_RUNTIME_BIND_CLI="$bind_cli" \
+  STEWARD_TG_NODE_HARNESS="$proof_root/tg_aie_harness.js" \
+  STEWARD_TG_ROOT="$tg_root" \
+  STEWARD_AIE_ROOT="$aie_root" \
+  STEWARD_SENTINEL_ROOT="$sentinel_root" \
+  STEWARD_CURRENT_ROOT="$steward_root" \
+  go test ./services/api -run '^TestStewardTGAIECrossProcessV21$' -count=1 -v
+)
+
+printf '{"schema":"steward.p2.tg-aie-cross-process/0.1","runtime_head":"%s","works_head":"%s","trust_gateway_head":"%s","aie_head":"%s","runtime_to_works":"PASS","works_context_readback":"PASS","tg_v21":"PASS","aie_live_revalidation":"PASS","works_pdr_correlation":"PASS","local_git_effect":"PASS","post_effect_subject_binding":"PASS","independent_sentinel_exact_head":"PASS","sentinel_receipt_offline_valid":"PASS","stale_subject_invalidation":"PASS","revocation_fail_closed":"PASS","production_binding":"absent"}\n' \
+  "$expected_runtime" "$expected_works" "$expected_tg" "$expected_aie"
