@@ -1,4 +1,4 @@
-# STEWARD Visual Frontier Profile v1.2
+# STEWARD Visual Frontier Profile v1.3
 
 ## Purpose
 
@@ -89,6 +89,63 @@ The former website treatment mixed role and state semantics by presenting `Guide
 
 The website compact-presence section passed desktop and mobile browser QA with no page or console errors before source commit `04b075c2ba609c08e8a39ca1936badc3c6153911`.
 
+## Motion / expression grammar
+
+The runtime now implements the full Brand OS presence contract as a governed procedural layer above the three verified GLB clips.
+
+Ownership remains split correctly:
+
+- motion/character contract owner: `Aftergraph/brand`
+- canonical contract id: `steward.presence.v1`
+- STEWARD runtime implementation: `steward.motion-runtime/2.0`
+- runtime manifest: `/assets/motion/presence-runtime-v2.json`
+- runtime manifest SHA-256: `047464f20b75763d14d969fbb14fa16780a7d6dfdb554cb3a90e9e8809e92378`
+- website source commit: `4c71ce1322281056c70dd896abefc03936fd43f6`
+
+The baked GLB remains intentionally small and verified:
+
+`idle · blink · verify`
+
+The twelve semantic states are expressed as a procedural layer after `AnimationMixer.update()`. This is safe because the verified GLB writes the complete 20-bone pose channels on every baked clip frame, so the state offsets do not accumulate.
+
+| State | Motion grammar | Accent token |
+| --- | --- | --- |
+| idle | ambient_breathe | steward_copper |
+| thinking | visor_attention | steward_copper |
+| planning | ordered_scan | system_blue |
+| executing | forward_action | decision_amber |
+| inspecting | focus_scan | control_cyan |
+| waiting | slow_hold | slate |
+| blocked | boundary_stop | decision_amber |
+| approval | attention_gate | authority_violet |
+| verifying | custody_ring_raise | pine_teal |
+| approving | bounded_confirm | authority_violet |
+| succeeded | settled_confirm | moss |
+| failed | bounded_break | decision_amber |
+
+Runtime signal semantics use canonical Brand OS token values rather than colors inferred from reference artwork.
+
+Hard runtime bounds:
+
+- state transitions: `160–420 ms`
+- blink interval: `3.5–5.5 s`
+- pointer orientation: at most `6°`
+- reduced motion: no continuous motion, zero-duration state transition, preserve final pose and semantic label
+
+The visual QA route accepts `?presence=<state>` only as an explicit visual preview. It does not change canonical state.
+
+Falsification evidence before source commit `4c71ce1322281056c70dd896abefc03936fd43f6`:
+
+- all 12 PresenceProjection states loaded independently: PASS
+- exact motion id and accent token for all 12 states: PASS
+- verified GLB clips remained `blink,idle,verify`: PASS
+- normal executing state changed rendered pixels over time: PASS
+- reduced-motion verifying state remained pixel-stable over time: PASS
+- auto mode advanced `idle → thinking`: PASS
+- console/page/network errors across 12 fixed-state cases: 0
+
+Motion remains a projection. A motion, pose, color or halo pulse cannot create authority, approval, execution truth or verification truth.
+
 ## Material and signal hierarchy
 
 | Role | Rendering intent |
@@ -154,7 +211,7 @@ Before push of source commit `a25fa626979b3f938e9cec232cbaef52771e9db3`:
 - desktop WebGL: PASS
 - mobile + reduced motion: PASS
 - forced GLB failure → rev5 idle fallback: PASS
-- normal browser console/page errors: 0\n- compact presence asset SHA integrity: PASS\n- compact presence desktop/mobile browser QA: PASS
+- normal browser console/page errors: 0\n- compact presence asset SHA integrity: PASS\n- compact presence desktop/mobile browser QA: PASS\n- 12-state motion grammar browser QA: PASS\n- reduced-motion pixel stability: PASS\n- normal-motion pixel change: PASS\n- auto-sequence advancement: PASS
 
 ## Current delivery observation
 
