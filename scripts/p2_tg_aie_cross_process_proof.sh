@@ -47,7 +47,8 @@ command -v go >/dev/null
 # Build the exact Runtime command if the prior cross-process proof has not
 # already done so in this checkout.
 dispatch_cli="$runtime_root/packages/runtime-host/dist/steward-dispatch-v2-cli.js"
-if [[ ! -s "$dispatch_cli" ]]; then
+bind_cli="$runtime_root/packages/runtime-host/dist/steward-bind-subject-v2-cli.js"
+if [[ ! -s "$dispatch_cli" || ! -s "$bind_cli" ]]; then
   pnpm_run() {
     if command -v pnpm >/dev/null 2>&1; then
       pnpm "$@"
@@ -67,6 +68,7 @@ if [[ ! -s "$dispatch_cli" ]]; then
   )
 fi
 [[ -s "$dispatch_cli" ]] || { echo "Runtime V2 dispatch CLI missing" >&2; exit 1; }
+[[ -s "$bind_cli" ]] || { echo "Runtime V2 subject-binding CLI missing" >&2; exit 1; }
 
 proof_root="$(mktemp -d "${RUNNER_TEMP:-/tmp}/steward-p2-tg-aie.XXXXXX")"
 proof_test="$works_root/services/api/steward_tg_aie_cross_process_test.go"
@@ -81,12 +83,14 @@ cat > "$proof_root/tg_aie_harness.js" <<'NODEEOF'
 
 const assert = require('node:assert/strict');
 const { spawnSync } = require('node:child_process');
+const fs = require('node:fs');
 const path = require('node:path');
 
 const tgRoot = process.env.STEWARD_TG_ROOT;
 const aieRoot = process.env.STEWARD_AIE_ROOT;
 const stateFile = process.env.STEWARD_AIE_STATE;
-if (!tgRoot || !aieRoot || !stateFile) throw new Error('proof roots/state missing');
+const gitRepo = process.env.STEWARD_GIT_REPO;
+if (!tgRoot || !aieRoot || !stateFile || !gitRepo) throw new Error('proof roots/state/git repo missing');
 
 const { authorizeV21Action } = require(path.join(tgRoot, 'src/gateway/platform-execution.js'));
 const { actionFingerprint } = require(path.join(tgRoot, 'src/gateway/aie-client.js'));
@@ -107,6 +111,19 @@ function py(script, argv = []) {
     throw new Error(`python helper failed status=${out.status} stdout=${out.stdout} stderr=${out.stderr}`);
   }
   return (out.stdout || '').trim();
+}
+
+function run(command, argv = [], cwd = undefined) {
+  const out = spawnSync(command, argv, {
+    cwd,
+    encoding: 'utf8',
+    env: process.env,
+    maxBuffer: 256 * 1024,
+  });
+  if (out.status !== 0) {
+    throw new Error(`${command} failed status=${out.status} stdout=${out.stdout} stderr=${out.stderr}`);
+  }
+  return out;
 }
 
 const seed = String.raw`
@@ -201,6 +218,19 @@ const deps = {
   ));
   assert.ok(evidenceCount >= 1, 'AIE action.revalidated evidence was not persisted');
 
+  // Staging Habitat/Git effect: real git CLI in an isolated local repository,
+  // only after TG/AIE authorization has returned successfully.
+  fs.mkdirSync(gitRepo, { recursive: true });
+  run('git', ['init', '-q'], gitRepo);
+  run('git', ['config', 'user.name', 'Aftergraph P2 Proof'], gitRepo);
+  run('git', ['config', 'user.email', 'p2-proof@aftergraph.invalid'], gitRepo);
+  fs.writeFileSync(path.join(gitRepo, 'candidate.txt'), 'authorized candidate\n', 'utf8');
+  run('git', ['add', 'candidate.txt'], gitRepo);
+  run('git', ['commit', '-q', '-m', 'test(p2): authorized candidate'], gitRepo);
+  const gitSha = run('git', ['rev-parse', 'HEAD'], gitRepo).stdout.trim();
+  assert.match(gitSha, /^[a-f0-9]{40}$/);
+  const verificationSubject = `git:Aftergraph/STEWARD-by-Aftergraph@${gitSha}`;
+
   const revoke = String.raw`
 import sys
 from pathlib import Path
@@ -233,6 +263,8 @@ state._conn.close()
     revoked = err && err.code === 'authority_revoked';
   }
   assert.equal(revoked, true, 'revoked AIE authority did not fail closed before PDR');
+  const headAfterRevocation = run('git', ['rev-parse', 'HEAD'], gitRepo).stdout.trim();
+  assert.equal(headAfterRevocation, gitSha, 'revoked authorization changed Git subject');
 
   process.stdout.write(JSON.stringify({
     ok: true,
@@ -241,6 +273,8 @@ state._conn.close()
     execution_pdr_id: pdrId,
     works_correlation: allowed.correlation.receipt.status,
     aie_revalidation_evidence: evidenceCount,
+    git_sha: gitSha,
+    verification_subject: verificationSubject,
     revocation_fail_closed: true,
   }) + '\n');
 })().catch((err) => {
@@ -279,15 +313,25 @@ type tgAIEProof struct {
 	ExecutionPDRID          string `json:"execution_pdr_id"`
 	WorksCorrelation        string `json:"works_correlation"`
 	AIERevalidationEvidence int    `json:"aie_revalidation_evidence"`
+	GitSHA                  string `json:"git_sha"`
+	VerificationSubject     string `json:"verification_subject"`
 	RevocationFailClosed    bool   `json:"revocation_fail_closed"`
+}
+
+type runtimeBindResult struct {
+	OK bool `json:"ok"`
+	Receipt struct {
+		Subject string `json:"subject"`
+	} `json:"receipt"`
 }
 
 func TestStewardTGAIECrossProcessV21(t *testing.T) {
 	runtimeCLI := os.Getenv("STEWARD_RUNTIME_DISPATCH_CLI")
+	bindCLI := os.Getenv("STEWARD_RUNTIME_BIND_CLI")
 	nodeHarness := os.Getenv("STEWARD_TG_NODE_HARNESS")
 	tgRoot := os.Getenv("STEWARD_TG_ROOT")
 	aieRoot := os.Getenv("STEWARD_AIE_ROOT")
-	if runtimeCLI == "" || nodeHarness == "" || tgRoot == "" || aieRoot == "" {
+	if runtimeCLI == "" || bindCLI == "" || nodeHarness == "" || tgRoot == "" || aieRoot == "" {
 		t.Fatal("proof paths missing")
 	}
 
@@ -332,7 +376,9 @@ func TestStewardTGAIECrossProcessV21(t *testing.T) {
 		t.Fatalf("bad Runtime receipt: %+v", dispatch)
 	}
 
-	stateFile := filepath.Join(t.TempDir(), "aie-state.db")
+	proofDir := t.TempDir()
+	stateFile := filepath.Join(proofDir, "aie-state.db")
+	gitRepo := filepath.Join(proofDir, "git-candidate")
 	actionID := "act_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 	tgInput := map[string]any{
 		"actionId": actionID,
@@ -356,6 +402,7 @@ func TestStewardTGAIECrossProcessV21(t *testing.T) {
 		"STEWARD_TG_ROOT="+tgRoot,
 		"STEWARD_AIE_ROOT="+aieRoot,
 		"STEWARD_AIE_STATE="+stateFile,
+		"STEWARD_GIT_REPO="+gitRepo,
 		"STEWARD_TG_INPUT="+string(inputRaw),
 	)
 	tgOut, err := tgCmd.CombinedOutput()
@@ -379,19 +426,51 @@ func TestStewardTGAIECrossProcessV21(t *testing.T) {
 	if proof.WorksCorrelation != "recorded" && proof.WorksCorrelation != "already_recorded" {
 		t.Fatalf("unexpected WORKS correlation: %q", proof.WorksCorrelation)
 	}
+	if len(proof.GitSHA) != 40 || proof.VerificationSubject != "git:Aftergraph/STEWARD-by-Aftergraph@"+proof.GitSHA {
+		t.Fatalf("invalid observed Git subject: %+v", proof)
+	}
 
-	t.Logf("TG/AIE proof: %s", tgOut)
+	bindReq := map[string]any{
+		"workId": workID,
+		"worksExecutionId": dispatch.Receipt.WorksExecutionID,
+		"attemptId": "attempt/tg-aie/1",
+		"effectId": "effect/tg-aie/1",
+		"causalId": "causal/tg-aie/1",
+		"subject": proof.VerificationSubject,
+	}
+	bindRaw, _ := json.Marshal(bindReq)
+	bindCmd := exec.Command("node", bindCLI)
+	bindCmd.Env = append(os.Environ(),
+		"WORKS_BASE_URL="+base,
+		"WORKS_BEARER_TOKEN="+dispatchV2PlatformToken,
+		"WORKS_PLATFORM_BRIDGE_SECRET="+dispatchV2BridgeSecret,
+	)
+	bindCmd.Stdin = bytes.NewReader(bindRaw)
+	bindOut, err := bindCmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("Runtime subject binding failed: %v output=%s", err, bindOut)
+	}
+	var bound runtimeBindResult
+	if err := json.Unmarshal(bindOut, &bound); err != nil {
+		t.Fatalf("decode Runtime subject binding: %v output=%s", err, bindOut)
+	}
+	if !bound.OK || bound.Receipt.Subject != proof.VerificationSubject {
+		t.Fatalf("subject binding mismatch: %+v output=%s", bound, bindOut)
+	}
+
+	t.Logf("TG/AIE/Git proof: %s subject=%s", tgOut, proof.VerificationSubject)
 }
 GOEOF
 
 (
   cd "$works_root"
   STEWARD_RUNTIME_DISPATCH_CLI="$dispatch_cli" \
+  STEWARD_RUNTIME_BIND_CLI="$bind_cli" \
   STEWARD_TG_NODE_HARNESS="$proof_root/tg_aie_harness.js" \
   STEWARD_TG_ROOT="$tg_root" \
   STEWARD_AIE_ROOT="$aie_root" \
   go test ./services/api -run '^TestStewardTGAIECrossProcessV21$' -count=1 -v
 )
 
-printf '{"schema":"steward.p2.tg-aie-cross-process/0.1","runtime_head":"%s","works_head":"%s","trust_gateway_head":"%s","aie_head":"%s","runtime_to_works":"PASS","works_context_readback":"PASS","tg_v21":"PASS","aie_live_revalidation":"PASS","works_pdr_correlation":"PASS","revocation_fail_closed":"PASS","production_binding":"absent"}\n' \
+printf '{"schema":"steward.p2.tg-aie-cross-process/0.1","runtime_head":"%s","works_head":"%s","trust_gateway_head":"%s","aie_head":"%s","runtime_to_works":"PASS","works_context_readback":"PASS","tg_v21":"PASS","aie_live_revalidation":"PASS","works_pdr_correlation":"PASS","local_git_effect":"PASS","post_effect_subject_binding":"PASS","revocation_fail_closed":"PASS","production_binding":"absent"}\n' \
   "$expected_runtime" "$expected_works" "$expected_tg" "$expected_aie"
