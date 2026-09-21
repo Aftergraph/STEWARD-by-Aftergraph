@@ -17,11 +17,11 @@
       "items": { "type": "string", "pattern": "^[a-z0-9-]+$" }
     },
     "features": {
-      "type": "type_placeholder",
+      "type": "object",
       "required": ["has_wiki", "has_discussions", "has_projects"],
       "properties": {
         "has_wiki": { "type": "boolean" },
-        "has_discussions": { "boolean": true },
+        "has_discussions": { "type": "boolean" },
         "has_projects": { "type": "boolean" }
       },
       "additionalProperties": false
