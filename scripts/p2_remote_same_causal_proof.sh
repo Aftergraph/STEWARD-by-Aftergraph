@@ -335,13 +335,22 @@ const deps = {
     assert.equal(transportCalls, 1);
     assert.equal(JSON.stringify(audit).includes(token), false);
 
-    const observed = JSON.parse(run('gh', [
-      'api', 'repos/' + targetRepo + '/git/ref/heads/' + targetBranch,
-    ]).stdout).object.sha;
+    // GitHub may acknowledge the ref PATCH before every read replica exposes
+    // the new ref. Require exact remote readback, but tolerate only a small
+    // bounded propagation window. Never accept the mutation response alone.
+    let observed = null;
+    let prHead = null;
+    for (let attempt = 0; attempt < 12; attempt += 1) {
+      observed = JSON.parse(run('gh', [
+        'api', 'repos/' + targetRepo + '/git/ref/heads/' + targetBranch,
+      ]).stdout).object.sha;
+      prHead = JSON.parse(run('gh', [
+        'api', 'repos/' + targetRepo + '/pulls/' + targetPR,
+      ]).stdout).head.sha;
+      if (observed === shaB && prHead === shaB) break;
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 250);
+    }
     assert.equal(observed, shaB);
-    const prHead = JSON.parse(run('gh', [
-      'api', 'repos/' + targetRepo + '/pulls/' + targetPR,
-    ]).stdout).head.sha;
     assert.equal(prHead, shaB);
 
     const sentinelB = sentinelReview();
