@@ -180,5 +180,6 @@ def asdict_safe(event: AuditEvent) -> dict[str, Any]:
     }
 
 
-def load_correlation(path: Path) -> WorksCorrelation:\n    data = json.loads(Path(path).read_text(encoding="utf-8"))
+def load_correlation(path: Path) -> WorksCorrelation:
+    data = json.loads(Path(path).read_text(encoding="utf-8"))
     return WorksCorrelation.from_mapping(data)
