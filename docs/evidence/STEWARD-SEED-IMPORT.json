@@ -18,5 +18,16 @@
   ],
   "relationship": "v0.2 is the v0.1 file-tree superset; v0.1 Git history is preserved by its archive hash and exact source HEAD",
   "import_base_commit": "60d8ffd39a68ac2fa449ce395cd5f1a43ee6953b",
-  "verification": "pending canonical CI readback"
+  "verification": {
+    "status": "PASS",
+    "canonical_head": "63215e2563ddff14767b1a7fe7eef4f37d742707",
+    "canonical_tree": "075918765879a1b7a544e605598637eec2df2c31",
+    "recursive_tree_entries": 77,
+    "file_blobs": 64,
+    "required_paths_present": true,
+    "workflow_run_id": 35578936578,
+    "workflow_run_number": 5,
+    "workflow_conclusion": "success",
+    "readback_at": "2026-09-21T08:38:32Z"
+  }
 }
