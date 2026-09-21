@@ -37,5 +37,14 @@ class ContractTests(unittest.TestCase):
     def test_succeeded_presence_requires_verification_verdict(self):
         self.assertTrue(self._errors(self._schema('presence-projection.schema.json'), self._fixture('invalid', 'presence-projection-succeeded-without-verdict.json')))
 
+    def test_valid_reviewer_persona(self):
+        self.assertEqual([], self._errors(self._schema('actor-persona.schema.json'), self._fixture('valid', 'actor-persona-reviewer.json')))
+
+    def test_valid_subscriber_persona(self):
+        self.assertEqual([], self._errors(self._schema('actor-persona.schema.json'), self._fixture('valid', 'actor-persona-subscriber.json')))
+
+    def test_persona_cannot_claim_authority(self):
+        self.assertTrue(self._errors(self._schema('actor-persona.schema.json'), self._fixture('invalid', 'actor-persona-self-authorizing.json')))
+
 if __name__ == '__main__':
     unittest.main()
