@@ -253,4 +253,135 @@ const deps = {
 
     const bridge = path.join(aieRoot, 'scripts', 'aie_revalidate_bridge.py');
     function revalidate() {
-      con
+      const out = spawnSync('python3', [
+        bridge, '--state', stateFile, '--action-id', input.actionId,
+        '--expected-binding', digest,
+      ], { encoding: 'utf8', env: process.env, maxBuffer: 256 * 1024 });
+      let parsed = null;
+      try { parsed = JSON.parse((out.stdout || '').trim()); } catch {}
+      if (out.status !== 0 || !parsed?.ok ||
+          parsed.authority_lease_id !== input.authorityLeaseId) {
+        return { ok: false, reason: parsed?.code || 'aie_revalidation_failed' };
+      }
+      return { ok: true, version: parsed.authority_lease_id };
+    }
+
+    const audit = [];
+    let transportCalls = 0;
+    const broker = createGovernedEgressBroker({
+      handleStore: store,
+      authorityCheck: async () => revalidate(),
+      approvalCheck: async () => ({ ok: true, expiresAt: now + 5 * 60 * 1000 }),
+      destinationPolicy: [{
+        host: 'api.github.com', schemes: ['https'], ports: [443],
+        methods: ['PATCH'], pathPrefixes: [apiPath],
+      }],
+      audit: (event) => audit.push(event),
+      commitGuard: async ({ request }) => (
+        request.executionContextId === input.executionContextId &&
+        request.actionId === input.actionId &&
+        request.effectId === input.effectId &&
+        request.effectClass === 'git.mutate' &&
+        request.git?.repository === targetRepo &&
+        request.git?.ref === ref
+      ) ? { ok: true, permitId: 'permit/p2-remote-same-causal' } : { ok: false },
+      credentialInjector: ({ secret, request }) => ({
+        ...request,
+        http: {
+          ...request.http,
+          headers: { ...request.http.headers, authorization: 'Bearer ' + secret },
+        },
+      }),
+      transport: async (request, context) => {
+        transportCalls += 1;
+        return createPinnedTransport()(request, context);
+      },
+    });
+
+    const git = new GovernedGitEgress({ broker, audit: (event) => audit.push(event) });
+    const mutation = await git.execute({
+      operation: 'push',
+      repository: targetRepo,
+      ref,
+      newSha: shaB,
+      force: true,
+      requestId: 'req_p2_remote_same_causal_1',
+      correlationId: input.executionContextId,
+      executionContextId: input.executionContextId,
+      actionId: input.actionId,
+      effectId: input.effectId,
+      tenantId: input.tenantId,
+      principalId: input.principalId,
+      missionId: input.missionId,
+      authorityRef: input.authorityLeaseId,
+      credentialHandle: handle.handleId,
+    });
+    assert.equal(mutation.result.status, 200);
+    assert.equal(transportCalls, 1);
+    assert.equal(JSON.stringify(audit).includes(token), false);
+
+    const observed = JSON.parse(run('gh', [
+      'api', 'repos/' + targetRepo + '/git/ref/heads/' + targetBranch,
+    ]).stdout).object.sha;
+    assert.equal(observed, shaB);
+    const prHead = JSON.parse(run('gh', [
+      'api', 'repos/' + targetRepo + '/pulls/' + targetPR,
+    ]).stdout).head.sha;
+    assert.equal(prHead, shaB);
+
+    const sentinelB = sentinelReview();
+    assert.equal(sentinelB.review.headSha, shaB);
+    assert.equal(sentinelB.verdict.decision, 'SHIP');
+    assert.match(sentinelB.receipt.receipt_id, /^[a-f0-9]{64}$/);
+
+    const revoke = [
+      'import sys',
+      'from pathlib import Path',
+      'aie_root, db_path, authority_id = sys.argv[1:]',
+      'sys.path.insert(0, str(Path(aie_root) / "src"))',
+      'from aie_runtime.engine import AdmissionEngine',
+      'from aie_runtime.persistent_state import PersistentState',
+      'state = PersistentState(db_path=db_path)',
+      'engine = AdmissionEngine(state=state, policy=lambda _: True)',
+      'engine.revoke(authority_id)',
+      'state.save_all()',
+      'state._conn.close()',
+    ].join('\n');
+    py(revoke, [aieRoot, stateFile, input.authorityLeaseId]);
+
+    let rejected = false;
+    try {
+      await git.execute({
+        operation: 'push',
+        repository: targetRepo,
+        ref,
+        newSha: shaA,
+        force: true,
+        requestId: 'req_p2_remote_same_causal_2',
+        correlationId: input.executionContextId,
+        executionContextId: input.executionContextId,
+        actionId: input.actionId,
+        effectId: input.effectId,
+        tenantId: input.tenantId,
+        principalId: input.principalId,
+        missionId: input.missionId,
+        authorityRef: input.authorityLeaseId,
+        credentialHandle: handle.handleId,
+      });
+    } catch (err) {
+      rejected = /authority_revoked/.test(String(err?.code || err?.message || err));
+    }
+    assert.equal(rejected, true);
+    assert.equal(transportCalls, 1);
+
+    process.stdout.write(JSON.stringify({
+      ok: true,
+      execution_context_id: input.executionContextId,
+      authority_lease_id: input.authorityLeaseId,
+      execution_pdr_id: pdrId,
+      works_correlation: allowed.correlation.receipt.status,
+      aie_revalidation_evidence: evidenceCount,
+      repository: targetRepo,
+      git_sha: shaB,
+      verification_subject: 'git:' + targetRepo + '@' + shaB,
+      sentinel_a_head: sentinelA.
