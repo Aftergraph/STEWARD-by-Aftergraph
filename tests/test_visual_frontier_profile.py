@@ -59,6 +59,30 @@ class VisualFrontierProfileTests(unittest.TestCase):
         self.assertFalse(state_assets["geometry_topology_changed"])
         self.assertFalse(state_assets["armature_changed"])
 
+    def test_compact_presence_is_same_rig_derived_subset(self):
+        profile = self._read("fixtures/valid/visual-frontier-profile.json")
+        presence_schema = self._read("schemas/presence-projection.schema.json")
+        canonical_states = set(presence_schema["properties"]["displayed_state"]["enum"])
+        compact = profile["compact_presence"]
+        self.assertEqual("steward.compact-presence-assets/1.0", compact["schema_version"])
+        self.assertEqual("/assets/compact-presence/manifest-v1.json", compact["manifest_path"])
+        self.assertEqual(5, compact["source_revision"])
+        self.assertEqual(
+            "04b075c2ba609c08e8a39ca1936badc3c6153911",
+            compact["source_commit"],
+        )
+        self.assertEqual(["idle", "verifying", "succeeded"], compact["states"])
+        self.assertTrue(set(compact["states"]) <= canonical_states)
+        self.assertEqual(
+            profile["source_scene"]["proportion_profile"],
+            compact["proportion_profile"],
+        )
+        self.assertEqual(
+            profile["source_scene"]["material_profile"],
+            compact["material_profile"],
+        )
+        self.assertTrue(compact["geometry_unchanged"])
+
 
 if __name__ == "__main__":
     unittest.main()
