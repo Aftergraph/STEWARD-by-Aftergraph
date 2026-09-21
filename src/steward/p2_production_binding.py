@@ -22,6 +22,7 @@ from typing import Any, Mapping
 _SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 _REQUIRED_OWNERS = ("runtime", "works", "trust_gateway", "aie", "sentinel")
 _SECRET_KEY_RE = re.compile(r"(?:token|secret|password|credential|private[_-]?key|api[_-]?key)", re.I)
+_SECRET_SAFE_METADATA_KEYS = {"scoped_credential_surrogation_live"}
 
 
 class ProductionBindingContractError(RuntimeError):
@@ -250,7 +251,7 @@ def _reject_secret_keys(value: Any, path: str = "$") -> None:
     if isinstance(value, Mapping):
         for key, child in value.items():
             key_text = str(key)
-            if _SECRET_KEY_RE.search(key_text):
+            if key_text not in _SECRET_SAFE_METADATA_KEYS and _SECRET_KEY_RE.search(key_text):
                 raise ProductionBindingContractError(
                     f"secret-bearing field forbidden at {path}.{key_text}"
                 )
