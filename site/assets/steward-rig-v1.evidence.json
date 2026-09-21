@@ -1,0 +1,60 @@
+{
+  "schema_version": 2,
+  "artifact_family": "STEWARD canonical 3D rig v1",
+  "status": "verified-structural-reference",
+  "source": {
+    "project": "Higgsfield 3D Jutsu",
+    "project_id": "2cefe187-1660-4af9-bfc9-5cadd765d5a3",
+    "project_revision": 2,
+    "authoring_runtime": "Blender 5.2 LTS",
+    "export_verification_runtime": "bpy 5.0.1"
+  },
+  "rig": {
+    "armature": "STEWARD_Rig",
+    "bone_count": 20,
+    "actions": [
+      "blink",
+      "idle",
+      "verify"
+    ],
+    "nla_tracks": [
+      "idle",
+      "blink",
+      "verify"
+    ]
+  },
+  "exports": {
+    "glb": {
+      "bytes": 609908,
+      "sha256": "187819a9086b12366f33f5290db98f7921b55e0674bf4aaee000e76241cb605f",
+      "animation_names": [
+        "blink",
+        "idle",
+        "verify"
+      ],
+      "skin_count": 1,
+      "node_count": 53,
+      "mesh_count": 28
+    },
+    "fbx": {
+      "bytes": 810796,
+      "sha256": "b114acce383e92dcea66d69c969c2800a12d42d6a30a9b7379e47b761b2688b8",
+      "roundtrip": {
+        "armature": "STEWARD_Rig",
+        "bone_count": 20,
+        "actions": [
+          "blink",
+          "idle",
+          "verify"
+        ]
+      }
+    },
+    "blend": {
+      "sha256": "cbc857fe2cd2ee3edfce208e09e06d722b06c0384a84d0fe302f57b83da87a7b"
+    },
+    "package_zip": {
+      "sha256": "d10fc1d7b174630241dbde64a8cedba380e36dfaecc31ddb3bfe75d28b9b1024"
+    }
+  },
+  "invariant": "Presence is projection-only; canonical truth, authority and verification remain externally owned."
+}
