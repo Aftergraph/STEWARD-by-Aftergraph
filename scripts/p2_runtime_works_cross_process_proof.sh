@@ -23,13 +23,25 @@ for var in WORKS_BASE_URL WORKS_BEARER_TOKEN WORKS_PLATFORM_BRIDGE_SECRET WORKS_
 done
 
 command -v node >/dev/null
-command -v corepack >/dev/null
 command -v go >/dev/null
+
+pnpm_run() {
+  if command -v pnpm >/dev/null 2>&1; then
+    pnpm "$@"
+  elif command -v corepack >/dev/null 2>&1; then
+    corepack pnpm "$@"
+  elif command -v npx >/dev/null 2>&1; then
+    npx --yes pnpm@11.20.0 "$@"
+  else
+    echo "pnpm unavailable: no pnpm, corepack or npx" >&2
+    return 1
+  fi
+}
 
 (
   cd "$runtime_root"
-  corepack pnpm install --frozen-lockfile
-  corepack pnpm --filter @aftergraph/runtime-host build
+  pnpm_run install --frozen-lockfile
+  pnpm_run --filter @aftergraph/runtime-host build
 )
 
 dispatch_cli="$runtime_root/packages/runtime-host/dist/steward-dispatch-v2-cli.js"
