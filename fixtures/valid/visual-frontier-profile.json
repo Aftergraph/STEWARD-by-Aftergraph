@@ -1,29 +1,53 @@
 {
-  "schema_version": "steward.visual-frontier-profile/1.0",
-  "profile_id": "steward-frontier-rev4-2026-09-21",
+  "schema_version": "steward.visual-frontier-profile/1.1",
+  "profile_id": "steward-frontier-rev5-2026-09-21",
   "identity_owner": "Aftergraph/brand",
   "renderer_owner": "Aftergraph/STEWARD-by-Aftergraph",
   "source_scene": {
     "provider": "higgsfield-3d-jutsu",
     "project_id": "2cefe187-1660-4af9-bfc9-5cadd765d5a3",
-    "revision": 4,
+    "revision": 5,
     "armature": "STEWARD_Rig",
     "bone_count": 20,
-    "geometry_changed": false
+    "proportion_profile": "frontier-proportions/1.0",
+    "material_profile": "frontier-material/1.1",
+    "geometry_topology_changed": false,
+    "armature_changed": false
   },
   "runtime": {
     "primary_renderer": "webgl-threejs",
     "verified_model": "verified-rig-glb",
+    "asset_path": "/assets/steward-rig-v2.glb",
+    "asset_sha256": "018fb057659975d67a3f6de3dc90a5167bc046d3bf366e3c0a9fe6ec96ecf6a8",
+    "source_commit": "a25fa626979b3f938e9cec232cbaef52771e9db3",
     "required_clips": ["idle", "blink", "verify"],
     "material_profile": "frontier-material/1.1",
+    "proportion_profile": "frontier-proportions/1.0",
     "portable_lighting": ["SUN", "POINT", "SPOT", "POINT"]
   },
   "state_assets": {
-    "schema_version": "steward.rig-state-assets/3.0",
-    "source_revision": 4,
-    "states": ["idle", "thinking", "planning", "executing", "verifying", "succeeded"],
+    "schema_version": "steward.rig-state-assets/4.0",
+    "manifest_path": "/assets/rig-states/rig-state-manifest-v4.json",
+    "source_revision": 5,
+    "proportion_profile": "frontier-proportions/1.0",
+    "material_profile": "frontier-material/1.1",
+    "states": [
+      "idle",
+      "thinking",
+      "planning",
+      "executing",
+      "inspecting",
+      "waiting",
+      "blocked",
+      "approval",
+      "verifying",
+      "approving",
+      "succeeded",
+      "failed"
+    ],
     "transparent": true,
-    "geometry_unchanged": true
+    "geometry_topology_changed": false,
+    "armature_changed": false
   },
   "presentation_boundary": {
     "claim_class": "projection-only",
