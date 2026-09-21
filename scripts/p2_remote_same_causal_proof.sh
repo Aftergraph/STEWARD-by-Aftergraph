@@ -522,5 +522,117 @@ func TestStewardRemoteSameCausalP2(t *testing.T) {
 		"WORKS_API_URL="+base,
 		"WORKS_API_TOKEN="+dispatchV2PlatformToken,
 		"WORKS_PLATFORM_BRIDGE_SECRET="+dispatchV2BridgeSecret,
-		"AIeadback":"PASS","post_effect_subject_binding":"PASS","current_subject_sentinel_ship":"PASS","revocation_fail_closed":"PASS","same_causal_owner_acceptance_readiness":"PASS","isolated_worktree_binding":"absent","production_deployment":"absent"}\n' \
+		"AIE_RUNTIME_PATH="+aieRoot,
+		"AIE_STATE_FILE="+stateFile,
+		"AIE_PYTHON=python3",
+		"STEWARD_TG_ROOT="+tgRoot,
+		"STEWARD_AIE_ROOT="+aieRoot,
+		"STEWARD_AIE_STATE="+stateFile,
+		"STEWARD_TG_INPUT="+string(inputRaw),
+	)
+	tgOut, err := tgCmd.CombinedOutput()
+	if err != nil { t.Fatalf("remote TG/AIE effect failed: %v output=%s", err, tgOut) }
+
+	lines := strings.Split(strings.TrimSpace(string(tgOut)), "\n")
+	var proof remoteEffectProof
+	if err := json.Unmarshal([]byte(lines[len(lines)-1]), &proof); err != nil {
+		t.Fatalf("decode remote proof: %v output=%s", err, tgOut)
+	}
+	if !proof.OK ||
+		proof.ExecutionContextID != dispatch.Receipt.ExecutionContextID ||
+		proof.AuthorityLeaseID != dispatchReq["authorityLeaseId"] ||
+		proof.ExecutionPDRID == "" ||
+		proof.AIERevalidationEvidence < 1 ||
+		proof.SentinelBVerdict != "SHIP" ||
+		proof.SentinelBHead != proof.GitSHA ||
+		len(proof.SentinelBReceiptID) != 64 ||
+		!proof.CredentialSurrogation ||
+		!proof.RemoteReadback ||
+		!proof.RevocationFailClosed ||
+		proof.TransportCallsAfterRevocation != 1 {
+		t.Fatalf("incomplete same-causal proof: %+v", proof)
+	}
+	if proof.WorksCorrelation != "recorded" && proof.WorksCorrelation != "already_recorded" {
+		t.Fatalf("unexpected WORKS correlation: %s", proof.WorksCorrelation)
+	}
+
+	bindReq := map[string]any{
+		"workId": workID,
+		"worksExecutionId": dispatch.Receipt.WorksExecutionID,
+		"attemptId": dispatchReq["attemptId"],
+		"effectId": dispatchReq["effectId"],
+		"causalId": dispatchReq["causalId"],
+		"subject": proof.VerificationSubject,
+	}
+	bindRaw, _ := json.Marshal(bindReq)
+	bindCmd := exec.Command("node", bindCLI)
+	bindCmd.Env = append(os.Environ(),
+		"WORKS_BASE_URL="+base,
+		"WORKS_BEARER_TOKEN="+dispatchV2PlatformToken,
+		"WORKS_PLATFORM_BRIDGE_SECRET="+dispatchV2BridgeSecret,
+	)
+	bindCmd.Stdin = bytes.NewReader(bindRaw)
+	bindOut, err := bindCmd.CombinedOutput()
+	if err != nil { t.Fatalf("Runtime subject binding failed: %v output=%s", err, bindOut) }
+
+	var bound remoteBindResult
+	if err := json.Unmarshal(bindOut, &bound); err != nil { t.Fatal(err) }
+	if !bound.OK || bound.Receipt.Subject != proof.VerificationSubject {
+		t.Fatalf("subject binding mismatch: %+v", bound)
+	}
+
+	readiness := `
+import json, sys
+from pathlib import Path
+root, work_id, wexec, ctx, action_id, auth, pdr, repo, sha, subject, s_head, s_verdict, s_receipt = sys.argv[1:]
+sys.path.insert(0, str(Path(root) / "src"))
+from steward.p2_mission_acceptance import P2ExecutionEvidence, P2EffectVerificationEvidence, project_owner_acceptance_readiness
+execution = P2ExecutionEvidence(work_id=work_id, works_execution_id=wexec, execution_context_id=ctx, action_id=action_id, authority_lease_id=auth, execution_pdr_id=pdr)
+effect = P2EffectVerificationEvidence(work_id=work_id, works_execution_id=wexec, execution_context_id=ctx, action_id=action_id, authority_lease_id=auth, execution_pdr_id=pdr, repository=repo, observed_sha=sha, bound_subject=subject, sentinel_head_sha=s_head, sentinel_verdict=s_verdict, sentinel_receipt_id=s_receipt, remote_readback=True, credential_surrogation=True, action_time_revalidation=True, revocation_fail_closed=True)
+out = project_owner_acceptance_readiness(execution, effect)
+assert out.ready_for_owner_acceptance
+print(json.dumps({"ready_for_owner_acceptance": True, "verification_subject": out.verification_subject, "sentinel_receipt_id": out.sentinel_receipt_id}))
+`
+	readyCmd := exec.Command(
+		"python3", "-c", readiness,
+		stewardRoot,
+		workID,
+		dispatch.Receipt.WorksExecutionID,
+		dispatch.Receipt.ExecutionContextID,
+		actionID,
+		dispatchReq["authorityLeaseId"].(string),
+		proof.ExecutionPDRID,
+		proof.Repository,
+		proof.GitSHA,
+		proof.VerificationSubject,
+		proof.SentinelBHead,
+		proof.SentinelBVerdict,
+		proof.SentinelBReceiptID,
+	)
+	readyOut, err := readyCmd.CombinedOutput()
+	if err != nil { t.Fatalf("owner acceptance readiness failed: %v output=%s", err, readyOut) }
+	if !strings.Contains(string(readyOut), `"ready_for_owner_acceptance": true`) {
+		t.Fatalf("missing readiness proof: %s", readyOut)
+	}
+
+	t.Logf("REMOTE-SAME-CAUSAL PASS work=%s ctx=%s action=%s pdr=%s subject=%s sentinel=%s",
+		workID, dispatch.Receipt.ExecutionContextID, actionID, proof.ExecutionPDRID,
+		proof.VerificationSubject, proof.SentinelBReceiptID)
+}
+GOEOF
+
+(
+  cd "$works_root"
+  STEWARD_RUNTIME_DISPATCH_CLI="$dispatch_cli" \
+  STEWARD_RUNTIME_BIND_CLI="$bind_cli" \
+  STEWARD_REMOTE_NODE_HARNESS="$proof_root/remote_effect_harness.js" \
+  STEWARD_TG_ROOT="$tg_root" \
+  STEWARD_AIE_ROOT="$aie_root" \
+  STEWARD_CURRENT_ROOT="$steward_root" \
+  go test ./services/api -run '^TestStewardRemoteSameCausalP2$' -count=1 -v
+)
+
+printf '{"schema":"steward.p2.remote-same-causal/0.1","runtime_head":"%s","works_head":"%s","trust_gateway_head":"%s","aie_head":"%s","sentinel_head":"%s","runtime_to_works":"PASS","tg_v21":"PASS","aie_action_time_revalidation":"PASS","works_pdr_correlation":"PASS","governed_remote_git_egress":"PASS","credential_surrogation":"PASS","remote_exact_sha_readback":"PASS","post_effect_subject_binding":"PASS","current_subject_sentinel_ship":"PASS","revocation_fail_closed":"PASS","same_causal_owner_acceptance_readiness":"PASS","isolated_worktree_binding":"absent","production_deployment":"absent"}\n' \
+  "$expected_runtime" "$expected_works" "$expected_tg" "$expected_aie" "$expected_sentinel"
+eadback":"PASS","post_effect_subject_binding":"PASS","current_subject_sentinel_ship":"PASS","revocation_fail_closed":"PASS","same_causal_owner_acceptance_readiness":"PASS","isolated_worktree_binding":"absent","production_deployment":"absent"}\n' \
   "$expected_runtime" "$expected_works" "$expected_tg" "$expected_aie" "$expected_sentinel"
