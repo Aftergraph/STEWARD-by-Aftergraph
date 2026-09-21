@@ -1,0 +1,19 @@
+{
+  "schema_version": "steward.delegated-authority/1.0",
+  "grant_id": "grant-verifier-001",
+  "grantee_persona_id": "persona-verification-subscriber-v1",
+  "authority_source": {
+    "owner": "aie",
+    "grant_ref": "aie:grant/org-aftergraph/repo-steward/verify-window-001"
+  },
+  "capabilities": ["verify:exact-subject"],
+  "parent_capabilities": ["verify:exact-subject", "verify:projection", "repo:read"],
+  "verification_binding": {
+    "verifier_owner": "sentinel",
+    "verifier_ref": "sentinel:verdict/steward-p2-golden-mission/001",
+    "subject_sha": "94a64d4322c159d524708d721aeee5223f2c873a"
+  },
+  "granted_at": "2026-09-21T08:00:00Z",
+  "expires_at": "2026-09-28T08:00:00Z",
+  "status": "granted"
+}

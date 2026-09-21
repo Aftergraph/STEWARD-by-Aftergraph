@@ -1,0 +1,18 @@
+{
+  "schema_version": "steward.actor-persona/1.0",
+  "persona_id": "persona-self-authorizing-reviewer-v0",
+  "actor_class": "agent",
+  "name": "Self-Authorizing Reviewer",
+  "role": "reviewer",
+  "attention_profile": {
+    "interests": ["schema-changes"],
+    "channel": "github-mentions"
+  },
+  "review_scope": {
+    "paths": ["schemas/"],
+    "verdicts": ["approve"]
+  },
+  "authority_effect": true,
+  "verification_effect": false,
+  "delegation_boundary": "Attempts to approve with authority effect"
+}
