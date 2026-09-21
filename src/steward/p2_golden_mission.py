@@ -11,6 +11,11 @@ from dataclasses import dataclass
 from typing import Any
 
 from .ports.git_subject import GitCandidateSubject, GitSubjectPort, GitWorktreeRequest
+from .ports.golden_mission_acceptance import (
+    GoldenMissionAcceptancePort,
+    GoldenMissionAcceptanceReceipt,
+    GoldenMissionIdentity,
+)
 from .ports.runtime import RuntimeDispatchV2Request, RuntimeDispatchV2Receipt, RuntimeV2Port
 from .ports.runtime_subject import (
     RuntimeSubjectBindingPort,
@@ -56,6 +61,7 @@ class GoldenMissionOutcome:
     candidate: GitCandidateSubject
     subject_binding: RuntimeSubjectBindingReceipt
     verification: SentinelVerificationProjection
+    acceptance: GoldenMissionAcceptanceReceipt
     accepted: bool
 
 
@@ -69,12 +75,14 @@ class GoldenMissionCoordinator:
         git_subject: GitSubjectPort,
         subject_binding: RuntimeSubjectBindingPort,
         sentinel: SentinelPort,
+        acceptance: GoldenMissionAcceptancePort,
     ) -> None:
         self._runtime = runtime
         self._trust_gateway = trust_gateway
         self._git_subject = git_subject
         self._subject_binding = subject_binding
         self._sentinel = sentinel
+        self._acceptance = acceptance
 
     def execute(
         self, request: GoldenMissionRequest
@@ -110,6 +118,10 @@ class GoldenMissionCoordinator:
         candidate = self._git_subject.capture(worktree)
         if candidate.work_id != runtime.work_id:
             raise GoldenMissionContractError("candidate rebound to another Work")
+        if action.admission_decision_id != request.dispatch.admission_decision_id:
+            raise GoldenMissionContractError(
+                "Trust Gateway rebound the admission decision"
+            )
 
         exact_subject = f"git:{candidate.repository}@{candidate.candidate_sha}"
         binding = self._subject_binding.bind(
@@ -132,12 +144,28 @@ class GoldenMissionCoordinator:
                 pull_request=request.pull_request,
             )
         )
-        accepted = verification.satisfies(candidate.candidate_sha)
+        sentinel_ship = verification.satisfies(candidate.candidate_sha)
+        acceptance = self._acceptance.evaluate(
+            canonical=GoldenMissionIdentity(
+                tenant_id=request.dispatch.tenant_id,
+                principal_id=request.dispatch.principal_id,
+                mission_id=request.dispatch.mission_id,
+                authority_lease_id=request.dispatch.authority_lease_id,
+                execution_context_id=runtime.execution_context_id,
+                work_id=runtime.work_id,
+                trace_id=runtime.trace_id,
+                action_id=request.action_id,
+                action_decision_id=action.execution_pdr_id,
+            ),
+            verification_subject_ref=exact_subject,
+            sentinel_ship=sentinel_ship,
+        )
         return GoldenMissionOutcome(
             runtime=runtime,
             action=action,
             candidate=candidate,
             subject_binding=binding,
             verification=verification,
-            accepted=accepted,
+            acceptance=acceptance,
+            accepted=sentinel_ship and acceptance.accepted,
         )
