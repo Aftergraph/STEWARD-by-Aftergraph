@@ -38,3 +38,47 @@ material remain in the Runtime process environment and are not placed in the
 STEWARD dispatch envelope or argv.
 
 This is an executable cross-repo seam, not yet a live deployment claim.
+
+
+## P2/V2.1 corrected transport
+
+Governance falsification in `Aftergraph/after-graph-governance#185` showed that
+legacy `dispatch.acceptance/1.0` cannot be the canonical P2 write path because
+it carries an unowned scalar `authority_epoch` and its correlation ID is not
+the full materialized execution-context required by TG V2.1.
+
+The P2 target is now Runtime's `runtime-steward-dispatch-v2` bridge
+(`Aftergraph/runtime#195`) into WORKS `dispatch.acceptance/2.0`
+(`Aftergraph/works-execution#127`).
+
+`RuntimeDispatchV2Request` carries canonical Work, Tenant, Principal,
+AuthorityLease, WorkerLease and admission-PDR references but no
+`authority_epoch` and no client-selected ctx/trc. `RuntimeV2Port` accepts
+only the WORKS-materialized ctx/trc/worker receipt and fails closed on Work
+rebinding or malformed correlation.
+
+The old RuntimePort remains compatibility code only; P2 evidence must use the
+V2 port.
+
+
+## Post-effect exact-subject binding
+
+The final coding verification subject is no longer accepted on the initial V2
+dispatch request. A candidate commit cannot be known before the governed Git
+effect creates it.
+
+After the candidate SHA is observed, STEWARD uses
+`RuntimeSubjectBindingPort` with Runtime's
+`runtime-steward-bind-subject-v2` bridge. The subject must be
+`git:<owner>/<repo>@<40hex>`; branch/base/placeholder subjects fail before
+transport. Runtime then binds the subject durably in WORKS.
+
+This keeps the sequence honest:
+
+```text
+dispatch accepted
+→ TG/AIE authorized effect
+→ candidate SHA observed
+→ Runtime/WORKS subject bind
+→ Sentinel exact-subject verification
+```
