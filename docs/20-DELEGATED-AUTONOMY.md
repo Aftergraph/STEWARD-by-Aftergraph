@@ -43,6 +43,24 @@ Attenuation is **algorithmic, not schema-structural**: JSON Schema cannot expres
 | Temporal state at instant | Algorithm (`grant_state`) |
 | Subject SHA binding | Algorithm (`resolve_action`) |
 
+## Level 4: the governed agent
+
+`src/steward_reference/governed_agent.py` composes the ladder into a real effect chain:
+
+```text
+persona + grant
+   -> attempt_merge: resolve pr:merge at instant
+      ALLOW -> real git merge in isolated repository, exact SHAs recorded
+      DENY  -> effect.blocked; subject untouched; no git.merge event
+   -> verify_independently: resolve verify:exact-subject against result SHA
+      merge agent without verify capability -> DENY (cannot self-verify)
+      bound verifier -> ALLOW only for the bound subject SHA
+   -> accept_mission: ACCEPTED only if merged AND externally verified
+   -> evidence bundle: ordered, attributable audit trace
+```
+
+The agent's audit trace events — `authority.resolve`, `effect.blocked`, `git.merge`, `verification.claim`, `mission.acceptance` — each carry sequence number, timestamp, actor, decision and detail. An allowed merge alone never yields acceptance: the full chain requires the external verdict too.
+
 ## What agents may and may not do
 
 | Capability | Valid grant allows | No grant / invalid grant |
@@ -72,7 +90,7 @@ Attenuation is **algorithmic, not schema-structural**: JSON Schema cannot expres
 ## Validation
 
 ```bash
-python -m unittest discover -s tests
+python -m unittest discover -s tests   # 47 tests incl. delegated authority + governed agent chains
 ```
 
 ## Production gate
