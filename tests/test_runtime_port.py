@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 import sys
 import unittest
@@ -9,7 +10,9 @@ from steward.ports.runtime import (
     RuntimeContractError,
     RuntimeDispatchRequest,
     RuntimePort,
+    RuntimeRejectedError,
     RuntimeUnavailableError,
+    SubprocessRuntimeTransport,
 )
 
 
@@ -28,6 +31,7 @@ class FakeTransport:
 
 def request():
     return RuntimeDispatchRequest(
+        work_id="wrk_01",
         mission_id="mis_p2",
         authority_ref="auth_" + "1" * 32,
         authority_epoch=8,
@@ -46,6 +50,7 @@ def request():
 class RuntimePortTests(unittest.TestCase):
     def test_request_does_not_mint_runtime_or_works_owned_ids(self):
         wire = request().to_runtime_wire()
+        self.assertEqual("wrk_01", wire["workId"])
         self.assertNotIn("runtimeDispatchId", wire)
         self.assertNotIn("executionContextId", wire)
         self.assertNotIn("traceId", wire)
@@ -85,6 +90,66 @@ class RuntimePortTests(unittest.TestCase):
         with self.assertRaises(RuntimeContractError):
             RuntimePort(transport).dispatch(bad)
         self.assertEqual([], transport.calls)
+
+
+class SubprocessRuntimeTransportTests(unittest.TestCase):
+    def _echo_command(self, response, exit_code=0):
+        script = (
+            "import json,sys;"
+            "req=json.load(sys.stdin);"
+            f"print(json.dumps({json.dumps(response)}));"
+            f"sys.exit({exit_code})"
+        )
+        return (sys.executable, "-c", script)
+
+    def test_cli_transport_maps_canonical_runtime_receipt(self):
+        response = {
+            "ok": True,
+            "receipt": {
+                "runtimeDispatchId": "rdisp/idem",
+                "worksExecutionId": "wexec/idem",
+                "executionContextId": "ctx_" + "a" * 32,
+                "traceId": "trc_" + "b" * 32,
+            },
+        }
+        transport = SubprocessRuntimeTransport(self._echo_command(response))
+        receipt = RuntimePort(transport).dispatch(request())
+        self.assertEqual("rdisp/idem", receipt.runtime_dispatch_id)
+        self.assertEqual("wexec/idem", receipt.works_execution_id)
+
+    def test_cli_transport_keeps_credentials_out_of_request_payload(self):
+        script = (
+            "import json,sys;"
+            "req=json.load(sys.stdin);"
+            "assert 'WORKS_BEARER_TOKEN' not in req;"
+            "assert 'WORKS_BASE_URL' not in req;"
+            "print(json.dumps({'ok':True,'receipt':{"
+            "'runtimeDispatchId':'rdisp/1','worksExecutionId':'wexec/1',"
+            "'executionContextId':'ctx_'+'a'*32,'traceId':'trc_'+'b'*32}}))"
+        )
+        transport = SubprocessRuntimeTransport(
+            (sys.executable, "-c", script),
+            environment={
+                "WORKS_BASE_URL": "https://works.invalid",
+                "WORKS_BEARER_TOKEN": "secret-test-token",
+            },
+        )
+        receipt = RuntimePort(transport).dispatch(request())
+        self.assertEqual("rdisp/1", receipt.runtime_dispatch_id)
+
+    def test_cli_rejection_is_typed_and_never_bypassed(self):
+        transport = SubprocessRuntimeTransport(
+            self._echo_command({"ok": False, "reason": "stale_authority"}, 1)
+        )
+        with self.assertRaises(RuntimeRejectedError) as ctx:
+            RuntimePort(transport).dispatch(request())
+        self.assertEqual("stale_authority", ctx.exception.reason)
+
+    def test_cli_non_json_output_fails_closed(self):
+        script = "print('not-json')"
+        transport = SubprocessRuntimeTransport((sys.executable, "-c", script))
+        with self.assertRaises(RuntimeContractError):
+            RuntimePort(transport).dispatch(request())
 
 
 if __name__ == "__main__":

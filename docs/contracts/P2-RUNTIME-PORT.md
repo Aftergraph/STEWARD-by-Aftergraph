@@ -1,6 +1,6 @@
 # P2 Runtime Port
 
-Status: transport-neutral composition port implemented; production Runtime transport still pending.
+Status: transport-neutral composition port + subprocess transport implemented; Runtime owner bridge is in `Aftergraph/runtime#195`; live deployed proof still pending.
 
 Baseline owner: `Aftergraph/runtime@4bff0be654c9e32f62317295d43d7e918139f3e9`.
 
@@ -25,3 +25,16 @@ The unit tests prove:
 - invalid budget/authority minima fail before transport.
 
 This is not yet evidence of a live Runtime transport. That remains tracked in `Aftergraph/runtime#194` and the STEWARD P2 tracker.
+
+
+## Selected concrete transport
+
+The Runtime owner now has candidate PR `Aftergraph/runtime#195` exposing
+`runtime-steward-dispatch`. STEWARD's `SubprocessRuntimeTransport` invokes
+that executable with JSON on stdin.
+
+The request contains correlation/work bindings only. WORKS URL and bearer
+material remain in the Runtime process environment and are not placed in the
+STEWARD dispatch envelope or argv.
+
+This is an executable cross-repo seam, not yet a live deployment claim.
