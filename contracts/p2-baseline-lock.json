@@ -1,0 +1,20 @@
+{
+  "schema": "aftergraph.steward.p2.integration-lock/0.2",
+  "captured_at": "2026-09-21",
+  "repositories": {
+    "steward": {"repo": "Aftergraph/STEWARD-by-Aftergraph", "bootstrap_commit": "60d8ffd39a68ac2fa449ce395cd5f1a43ee6953b"},
+    "governance": {"repo": "Aftergraph/after-graph-governance", "commit": "84d3cda4c3ce669ce4d6fbb031edbd3f514a3527"},
+    "works": {"repo": "Aftergraph/works-execution", "commit": "ab8c1d2a6cc322b3d730b1514b1141b8ee65310c"},
+    "runtime": {"repo": "Aftergraph/runtime", "commit": "4bff0be654c9e32f62317295d43d7e918139f3e9"},
+    "aie": {"repo": "Aftergraph/aie", "commit": "4c8b871478183557d147a6670a57c5b5e7b15024"},
+    "trust_gateway": {"repo": "Aftergraph/trust-gateway", "commit": "8a2c8d66a67d036227c77904844f105b39723f58"},
+    "sentinel": {"repo": "Aftergraph/sentinel", "commit": "eb51f824af2279ee3eee5daa8572bd54a34b3ca8"}
+  },
+  "invariants": [
+    "selected != authorized",
+    "completed != verified",
+    "execution-context/1.0 is not an authorization token",
+    "WORKS owns execution_context_id and trace_id at dispatch acceptance",
+    "verification binds to an immutable subject"
+  ]
+}
