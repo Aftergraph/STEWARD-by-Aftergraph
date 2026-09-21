@@ -96,7 +96,10 @@ class ReferenceVerticalSlice:
             self._event("worktree.provisioned", str(builder), f"isolated builder worktree from {base_sha}")
 
             before = subprocess.run(
-                ["python3", "-m", "unittest", "-q"], cwd=builder, capture_output=True, text=True
+                ["python3", "-B", "-m", "unittest", "-q"],
+                cwd=builder,
+                capture_output=True,
+                text=True,
             )
             if before.returncode == 0:
                 raise AssertionError("Reference baseline unexpectedly passed; proof subject is invalid")
@@ -105,7 +108,10 @@ class ReferenceVerticalSlice:
             (builder / "mathlib.py").write_text("def add(a, b):\n    return a + b\n", encoding="utf-8")
             self._event("code.mutated", work_id, "bounded fix applied in isolated worktree")
             after = subprocess.run(
-                ["python3", "-m", "unittest", "-q"], cwd=builder, capture_output=True, text=True
+                ["python3", "-B", "-m", "unittest", "-q"],
+                cwd=builder,
+                capture_output=True,
+                text=True,
             )
             tests_passed = after.returncode == 0
             if not tests_passed:
@@ -124,7 +130,10 @@ class ReferenceVerticalSlice:
             self._event("verification.worktree", verifier_sha, "fresh detached exact-subject worktree")
 
             independent = subprocess.run(
-                ["python3", "-m", "unittest", "-q"], cwd=verifier, capture_output=True, text=True
+                ["python3", "-B", "-m", "unittest", "-q"],
+                cwd=verifier,
+                capture_output=True,
+                text=True,
             )
             verdict = ReferenceVerdict(
                 subject_sha=verifier_sha,
