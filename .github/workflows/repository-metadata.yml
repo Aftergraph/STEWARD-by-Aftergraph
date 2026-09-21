@@ -1,0 +1,112 @@
+name: repository-metadata
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/repository-metadata.json', '.github/workflows/repository-metadata.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  administration: write
+
+concurrency:
+  group: repository-metadata
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Validate manifest against schema
+        run: |
+          python -m pip install --disable-pip-version-check --no-input jsonschema==4.23.0
+          python - <<'PY'
+          import json
+          from jsonschema import Draft202012Validator
+          schema = json.load(open('.github/repository-metadata.schema.json'))
+          manifest = json.load(open('.github/repository-metadata.json'))
+          Draft202012Validator(schema).validate(manifest)
+          print('METADATA_MANIFEST=VALID')
+          PY
+
+      - name: Apply description and features
+        run: |
+          python - <<'PY'
+          import json, os, urllib.request
+          manifest = json.load(open('.github/repository-metadata.json'))
+          repo = os.environ['GITHUB_REPOSITORY']
+          token = os.environ['GITHUB_TOKEN']
+          payload = {
+              'description': manifest['description'],
+              'has_wiki': manifest['features']['has_wiki'],
+              'has_discussions': manifest['features']['has_discussions'],
+              'has_projects': manifest['features']['has_projects']
+          }
+          req = urllib.request.Request(
+              f'https://api.github.com/repos/{repo}',
+              data=json.dumps(payload).encode(),
+              headers={'Authorization': f'token {token}', 'Accept': 'application/vnd.github+json'},
+              method='PATCH')
+          with urllib.request.urlopen(req) as r:
+              print(f'DESCRIPTION_FEATURES=APPLIED status={r.status}')
+          PY
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Apply topics
+        run: |
+          python - <<'PY'
+          import json, os, urllib.request
+          manifest = json.load(open('.github/repository-metadata.json'))
+          repo = os.environ['GITHUB_REPOSITORY']
+          token = os.environ['GITHUB_TOKEN']
+          req = urllib.request.Request(
+              f'https://api.github.com/repos/{repo}/topics',
+              data=json.dumps({'names': manifest['topics']}).encode(),
+              headers={'Authorization': f'token {token}', 'Accept': 'application/vnd.github.mercy-preview+json'},
+              method='PUT')
+          with urllib.request.urlopen(req) as r:
+              print(f'TOPICS=APPLIED status={r.status}')
+          PY
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Apply homepage fail-closed
+        run: |
+          python - <<'PY'
+          import json, os, urllib.request
+          manifest = json.load(open('.github/repository-metadata.json'))
+          candidate = manifest['homepage']['candidate']
+          mode = manifest['homepage']['probe']
+          if mode != 'fail-closed' or not candidate:
+              print('HOMEPAGE=SKIPPED')
+              raise SystemExit(0)
+          try:
+              req = urllib.request.Request(candidate, method='GET', headers={'User-Agent': 'steward-metadata-probe'})
+              with urllib.request.urlopen(req, timeout=15) as r:
+                  ok = r.status == 200
+                  body = r.read(4096).decode('utf-8', 'replace')
+          except Exception as exc:
+              ok = False
+              body = str(exc)
+          if not ok or 'sign-in' in body.lower() or 'sign in' in body.lower():
+              print(f'HOMEPAGE=BLOCKED (probe failed: {candidate})')
+              raise SystemExit(0)
+          repo = os.environ['GITHUB_REPOSITORY']
+          token = os.environ['GITHUB_TOKEN']
+          req = urllib.request.Request(
+              f'https://api.github.com/repos/{repo}',
+              data=json.dumps({'homepage': candidate}).encode(),
+              headers={'Authorization': f'token {token}', 'Accept': 'application/vnd.github+json'},
+              method='PATCH')
+          with urllib.request.urlopen(req) as r:
+              print(f'HOMEPAGE=APPLIED status={r.status}')
+          PY
+        env:
+          GITHUB_TOKEN: ${{ github.token }}

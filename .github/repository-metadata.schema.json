@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/Aftergraph/STEWARD-by-Aftergraph/main/.github/repository-metadata.schema.json",
+  "title": "STEWARD repository metadata contract",
+  "type": "object",
+  "required": ["description", "topics", "features", "homepage"],
+  "properties": {
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 350
+    },
+    "topics": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 20,
+      "items": { "type": "string", "pattern": "^[a-z0-9-]+$" }
+    },
+    "features": {
+      "type": "object",
+      "required": ["has_wiki", "has_discussions", "has_projects"],
+      "properties": {
+        "has_wiki": { "type": "boolean" },
+        "has_discussions": { "type": "boolean" },
+        "has_projects": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "homepage": {
+      "type": "object",
+      "required": ["candidate", "probe"],
+      "properties": {
+        "candidate": { "type": ["string", "null"], "format": "uri" },
+        "probe": { "type": "string", "enum": ["fail-closed", "off"] }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

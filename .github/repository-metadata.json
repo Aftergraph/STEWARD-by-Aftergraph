@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Aftergraph/STEWARD-by-Aftergraph/main/.github/repository-metadata.schema.json",
+  "description": "STEWARD by Aftergraph \u2014 persistent governed intelligence system: canonical product/integration root and architecture seed for governed, verifiable autonomous work.",
+  "topics": [
+    "aftergraph",
+    "steward",
+    "governed-autonomy",
+    "ai-agents",
+    "agent-orchestration",
+    "mission-contracts",
+    "verification",
+    "specification",
+    "integration"
+  ],
+  "features": {
+    "has_wiki": false,
+    "has_discussions": false,
+    "has_projects": true
+  },
+  "homepage": {
+    "candidate": "https://steward-by-aftergraph.higgsfield.ai/",
+    "probe": "fail-closed"
+  }
+}
