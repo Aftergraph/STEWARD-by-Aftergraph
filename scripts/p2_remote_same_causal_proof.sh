@@ -522,4 +522,5 @@ func TestStewardRemoteSameCausalP2(t *testing.T) {
 		"WORKS_API_URL="+base,
 		"WORKS_API_TOKEN="+dispatchV2PlatformToken,
 		"WORKS_PLATFORM_BRIDGE_SECRET="+dispatchV2BridgeSecret,
-		"AI
+		"AIeadback":"PASS","post_effect_subject_binding":"PASS","current_subject_sentinel_ship":"PASS","revocation_fail_closed":"PASS","same_causal_owner_acceptance_readiness":"PASS","isolated_worktree_binding":"absent","production_deployment":"absent"}\n' \
+  "$expected_runtime" "$expected_works" "$expected_tg" "$expected_aie" "$expected_sentinel"
