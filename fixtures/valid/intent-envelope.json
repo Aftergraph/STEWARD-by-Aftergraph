@@ -1,0 +1,12 @@
+{
+  "intentId": "intent-001",
+  "principalRef": "principal-jonas",
+  "projectRef": "project-steward",
+  "threadRef": "thread-main",
+  "message": "Implement the governed coding vertical slice.",
+  "inputRefs": [],
+  "requestedCapabilities": ["git", "shell", "sentinel"],
+  "intelligencePreference": "deep",
+  "outputPreference": "verified-change",
+  "createdAt": "2026-09-21T05:00:00Z"
+}

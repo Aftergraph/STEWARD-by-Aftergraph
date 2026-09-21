@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aftergraph.steward.meter-sample.v0.1",
+  "title": "MeterSample",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sampleId",
+    "resource",
+    "quantity",
+    "unit",
+    "timestamp"
+  ],
+  "properties": {
+    "sampleId": {
+      "type": "string"
+    },
+    "resource": {
+      "enum": [
+        "input_tokens",
+        "output_tokens",
+        "model_cost",
+        "tool_cost",
+        "cpu_seconds",
+        "gpu_seconds",
+        "memory_gb_seconds",
+        "storage_bytes",
+        "network_bytes",
+        "browser_seconds",
+        "worker_seconds",
+        "human_seconds",
+        "verification_cost"
+      ]
+    },
+    "quantity": {
+      "type": "number",
+      "minimum": 0
+    },
+    "unit": {
+      "type": "string"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "missionRef": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "workRef": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "providerRef": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

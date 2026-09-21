@@ -1,0 +1,22 @@
+{
+  "schema": "steward.seed-import/1.0",
+  "canonical_repository": "Aftergraph/STEWARD-by-Aftergraph",
+  "imported_release": "steward-repo-v0.2(1).zip",
+  "imported_files": 62,
+  "imported_bytes": 93526,
+  "source_archives": [
+    {
+      "name": "steward-repo-v0.2(1).zip",
+      "sha256": "9a5d48a2a2764f0a6b498b8d360ddedf885550712a85d61aac0f60198cac71bd",
+      "tree_manifest_sha256": "592bf63ba94ec9b59a8e99f0845a409296cd406be4404e01c433fdb252290304"
+    },
+    {
+      "name": "steward-repo-v0.1(1).zip",
+      "sha256": "56164ecd380dc8b8889b84f5ff28157c677703038262b767df9584a6842e2447",
+      "git_head": "bc1f7e05929970384093e4852c8b70ec682de137"
+    }
+  ],
+  "relationship": "v0.2 is the v0.1 file-tree superset; v0.1 Git history is preserved by its archive hash and exact source HEAD",
+  "import_base_commit": "60d8ffd39a68ac2fa449ce395cd5f1a43ee6953b",
+  "verification": "pending canonical CI readback"
+}

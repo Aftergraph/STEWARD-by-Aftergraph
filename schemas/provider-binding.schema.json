@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aftergraph.steward.provider-binding.v0.1",
+  "title": "ProviderBinding",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "logicalModelRef",
+    "providerRef",
+    "providerModelId"
+  ],
+  "properties": {
+    "logicalModelRef": {
+      "type": "string"
+    },
+    "providerRef": {
+      "type": "string"
+    },
+    "endpointRef": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "providerModelId": {
+      "type": "string"
+    },
+    "modalities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "supportsTools": {
+      "type": "boolean"
+    },
+    "supportsStructuredOutput": {
+      "type": "boolean"
+    },
+    "supportsReasoning": {
+      "type": "boolean"
+    },
+    "contextCapacity": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1
+    },
+    "latencyClass": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "privacyClass": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "region": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

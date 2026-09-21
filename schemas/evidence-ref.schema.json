@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aftergraph.steward.evidence-ref.v0.1",
+  "title": "EvidenceRef",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "evidenceId",
+    "subjectRef",
+    "claimRef",
+    "kind",
+    "contentHash"
+  ],
+  "properties": {
+    "evidenceId": {
+      "type": "string"
+    },
+    "subjectRef": {
+      "type": "string"
+    },
+    "claimRef": {
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "test",
+        "oracle",
+        "readback",
+        "receipt",
+        "review",
+        "measurement",
+        "artifact",
+        "trace"
+      ]
+    },
+    "contentHash": {
+      "type": "string",
+      "minLength": 8
+    },
+    "sourceRef": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "independenceLineage": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "createdAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    }
+  }
+}

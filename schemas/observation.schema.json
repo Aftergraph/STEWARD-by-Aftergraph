@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aftergraph.steward.observation.v0.1",
+  "title": "Observation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "observationId",
+    "sourceType",
+    "sourceRef",
+    "observedAt",
+    "integrity"
+  ],
+  "properties": {
+    "observationId": {
+      "type": "string"
+    },
+    "sourceType": {
+      "enum": [
+        "human",
+        "tool",
+        "world",
+        "system",
+        "file",
+        "web",
+        "sensor",
+        "git",
+        "api"
+      ]
+    },
+    "sourceRef": {
+      "type": "string"
+    },
+    "observedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "contentRef": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "integrity": {
+      "enum": [
+        "unverified",
+        "verified-transport",
+        "verified-source",
+        "disputed"
+      ]
+    },
+    "freshness": {
+      "enum": [
+        "current",
+        "stale",
+        "superseded",
+        "unknown"
+      ]
+    },
+    "provenanceRefs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

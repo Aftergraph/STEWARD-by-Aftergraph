@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aftergraph.steward.worktree.v0.1",
+  "title": "WorktreeRef",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "repositoryRef",
+    "baseCommit",
+    "headCommit",
+    "ownerWorkRef",
+    "state"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "repositoryRef": {
+      "type": "string"
+    },
+    "path": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "baseCommit": {
+      "type": "string",
+      "minLength": 7
+    },
+    "branchRef": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "headCommit": {
+      "type": "string",
+      "minLength": 7
+    },
+    "ownerWorkRef": {
+      "type": "string"
+    },
+    "ownerAgentRef": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "state": {
+      "enum": [
+        "PROVISIONING",
+        "READY",
+        "ACTIVE",
+        "DIRTY",
+        "BLOCKED",
+        "COMMITTED",
+        "MERGED",
+        "ABANDONED",
+        "RELEASED"
+      ]
+    },
+    "createdAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    }
+  }
+}
