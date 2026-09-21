@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aftergraph.steward.effect.v0.1",
+  "title": "EffectIntent",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "effectId",
+    "missionRef",
+    "workRef",
+    "effectClass",
+    "target",
+    "idempotencyKey"
+  ],
+  "properties": {
+    "effectId": {
+      "type": "string"
+    },
+    "missionRef": {
+      "type": "string"
+    },
+    "workRef": {
+      "type": "string"
+    },
+    "rootIntentRef": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "effectClass": {
+      "type": "string"
+    },
+    "target": {
+      "type": "string"
+    },
+    "reversibility": {
+      "enum": [
+        "reversible",
+        "compensatable",
+        "irreversible",
+        "unknown"
+      ]
+    },
+    "financialImpact": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "externalVisibility": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "dataSensitivity": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "idempotencyKey": {
+      "type": "string"
+    },
+    "authorityRef": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}

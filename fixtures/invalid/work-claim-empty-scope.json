@@ -1,0 +1,9 @@
+{
+  "claimId": "claim-bad",
+  "missionRef": "mission-001",
+  "nodeRef": "node-001",
+  "agentRef": "agent-001",
+  "scope": [],
+  "mode": "write",
+  "state": "ACTIVE"
+}

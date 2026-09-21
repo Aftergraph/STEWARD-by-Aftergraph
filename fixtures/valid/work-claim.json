@@ -1,0 +1,12 @@
+{
+  "claimId": "claim-001",
+  "missionRef": "mission-001",
+  "nodeRef": "node-code-001",
+  "agentRef": "agent-builder-001",
+  "scope": ["repo:Aftergraph/steward", "path:src/**"],
+  "mode": "write",
+  "state": "ACTIVE",
+  "leaseRef": "lease-001",
+  "graphVersion": 1,
+  "expiresAt": "2026-09-21T06:00:00Z"
+}

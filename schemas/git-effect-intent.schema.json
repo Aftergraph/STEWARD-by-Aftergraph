@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aftergraph.steward.git-effect-intent.v0.1",
+  "title": "GitEffectIntent",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "effectId",
+    "missionRef",
+    "workRef",
+    "repositoryRef",
+    "operation",
+    "idempotencyKey",
+    "authorityRef"
+  ],
+  "properties": {
+    "effectId": {
+      "type": "string"
+    },
+    "missionRef": {
+      "type": "string"
+    },
+    "workRef": {
+      "type": "string"
+    },
+    "repositoryRef": {
+      "type": "string"
+    },
+    "operation": {
+      "enum": [
+        "push",
+        "create_pr",
+        "update_pr",
+        "merge",
+        "force_push",
+        "delete_remote_branch",
+        "tag",
+        "release"
+      ]
+    },
+    "sourceRef": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "targetRef": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "subjectCommit": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "idempotencyKey": {
+      "type": "string",
+      "minLength": 1
+    },
+    "authorityRef": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

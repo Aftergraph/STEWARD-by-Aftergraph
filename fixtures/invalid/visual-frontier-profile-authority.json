@@ -1,0 +1,34 @@
+{
+  "schema_version": "steward.visual-frontier-profile/1.0",
+  "profile_id": "invalid-authority-claim",
+  "identity_owner": "Aftergraph/brand",
+  "renderer_owner": "Aftergraph/STEWARD-by-Aftergraph",
+  "source_scene": {
+    "provider": "higgsfield-3d-jutsu",
+    "project_id": "2cefe187-1660-4af9-bfc9-5cadd765d5a3",
+    "revision": 4,
+    "armature": "STEWARD_Rig",
+    "bone_count": 20,
+    "geometry_changed": false
+  },
+  "runtime": {
+    "primary_renderer": "webgl-threejs",
+    "verified_model": "verified-rig-glb",
+    "required_clips": ["idle", "blink", "verify"],
+    "material_profile": "frontier-material/1.1",
+    "portable_lighting": ["SUN", "POINT", "SPOT", "POINT"]
+  },
+  "state_assets": {
+    "schema_version": "steward.rig-state-assets/3.0",
+    "source_revision": 4,
+    "states": ["idle", "thinking", "planning", "executing", "verifying", "succeeded"],
+    "transparent": true,
+    "geometry_unchanged": true
+  },
+  "presentation_boundary": {
+    "claim_class": "projection-only",
+    "canonical_truth": false,
+    "authority_effect": true,
+    "verification_effect": false
+  }
+}

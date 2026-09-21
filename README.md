@@ -1,28 +1,65 @@
-# STEWARD by Aftergraph
+# STEWARD
 
-STEWARD is Aftergraph's product/composition layer for persistent, proactive, governed and verifiable intelligent work.
+**Status:** architecture/specification seed v0.1 — September 2026  
+**Organization:** Aftergraph  
+**Purpose:** canonical product/integration root for STEWARD, the persistent governed intelligence system.
 
-> Perceive → understand → specify → reason → plan → organize → authorize → execute → verify → learn → wake.
+STEWARD turns human intent into durable Missions, coordinates heterogeneous intelligence and computers, executes through governed environments, produces artifacts/effects, verifies outcomes, learns from evidence, and remains steerable and revocable throughout the lifecycle.
 
-## Ownership
+## Core thesis
 
-STEWARD composes canonical Aftergraph owners rather than duplicating them:
+> Capability may accelerate only as fast as evidence, alignment, authority and verification can keep up.
 
-- governance/topology/contracts → `Aftergraph/after-graph-governance`
-- authority/delegation/revocation → `Aftergraph/aie`
-- enforcement/credentials/egress → `Aftergraph/trust-gateway`
-- durable Work/leases/checkpoints/effects → `Aftergraph/works-execution`
-- orchestration/dispatch → `Aftergraph/runtime`
-- independent verification → `Aftergraph/sentinel`
+STEWARD is not the canonical owner of authority, execution truth, or verification truth. It composes existing Aftergraph owners.
 
-## Current milestone
+## Canonical external owners
 
-P2 productionization has started. The first implemented adapter is the canonical WORKS dispatch-acceptance client, bound to the locked P2 baseline in `contracts/p2-baseline-lock.json`.
+| Concern | Canonical owner |
+|---|---|
+| Governance / topology / contracts | `Aftergraph/after-graph-governance` |
+| Authority / delegation / budget / revocation | `Aftergraph/aie` |
+| Policy enforcement / approvals / credential brokerage / egress | `Aftergraph/trust-gateway` |
+| Durable work / attempts / leases / checkpoints / effects | `Aftergraph/works-execution` |
+| Runtime lifecycle / orchestration integration | `Aftergraph/runtime` |
+| Independent exact-subject verification | `Aftergraph/sentinel` |
+| Models | `Aftergraph/model-registry` |
+| Skills | `Aftergraph/skills-vault` + `Aftergraph/skill-abi` |
+| Context continuity | `Aftergraph/context-continuity` |
+| Research / benchmarks | `Aftergraph/intelligence-systems-research` |
+| Brand | `Aftergraph/brand` |
 
-Run the current conformance suite:
+## What this repository owns
+
+- STEWARD product identity and system composition.
+- Canonical STEWARD architecture/specification.
+- Cross-repo integration contracts and adapters.
+- Harness composition profiles and reference orchestration logic.
+- Project/Thread/Composer/Command semantics at the STEWARD boundary.
+- Reference clients and product surfaces as they are consolidated.
+- Conformance tests for STEWARD integration behavior.
+
+## What this repository must not duplicate
+
+Authority, Trust Gateway policy enforcement, WORKS execution truth, Sentinel verification truth, Model Registry, Skills Vault, or infrastructure-provider ownership.
+
+## Documents
+
+Start with:
+
+1. `docs/00-MASTER-ARCHITECTURE.md`
+2. `docs/01-CHARTER-AND-SCOPE.md`
+3. `docs/02-DEFINITIONS.md`
+4. `docs/03-COMPONENT-OWNERSHIP.md`
+5. `docs/04-INFRASTRUCTURE-TOPOLOGY.md`
+6. `docs/14-IMPLEMENTATION-PLAN.md`
+7. `docs/18-PRESENCE-PROJECTION.md`
+
+## Validation
 
 ```bash
-PYTHONPATH=src python -m unittest discover -s tests -v
+python scripts/validate_repo.py
 ```
 
-A green repository test run is implementation evidence, not a claim of end-to-end institutional verification.
+## Research posture
+
+This repository is an implementation/specification seed, not evidence of novelty. Claims about novelty or superiority require the Aftergraph research protocol, prior-art review, reproducible experiments, cost/performance accounting, and independent verification.

@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aftergraph.steward.projection-event.v0.1",
+  "title": "ProjectionEvent",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "eventId",
+    "type",
+    "timestamp",
+    "sourceRef"
+  ],
+  "properties": {
+    "eventId": {
+      "type": "string"
+    },
+    "type": {
+      "enum": [
+        "text_delta",
+        "status",
+        "presence",
+        "observation",
+        "plan_update",
+        "work_started",
+        "work_progress",
+        "work_blocked",
+        "tool_started",
+        "tool_result",
+        "artifact_created",
+        "artifact_updated",
+        "approval_required",
+        "claim_acquired",
+        "handoff",
+        "evidence_added",
+        "verification_update",
+        "warning",
+        "error",
+        "completed"
+      ]
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sourceRef": {
+      "type": "string"
+    },
+    "projectRef": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "missionRef": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "workRef": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "payload": {
+      "type": "object"
+    }
+  }
+}

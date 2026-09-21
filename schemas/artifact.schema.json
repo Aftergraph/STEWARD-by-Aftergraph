@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aftergraph.steward.artifact.v0.1",
+  "title": "ArtifactRef",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "artifactId",
+    "version",
+    "kind",
+    "contentHash",
+    "contentRef"
+  ],
+  "properties": {
+    "artifactId": {
+      "type": "string"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "kind": {
+      "type": "string"
+    },
+    "mimeType": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "contentHash": {
+      "type": "string"
+    },
+    "contentRef": {
+      "type": "string"
+    },
+    "createdBy": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "missionRef": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "workRef": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "provenanceRefs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "verificationRefs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

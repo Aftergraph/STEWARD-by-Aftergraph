@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aftergraph.steward.trace.v0.1",
+  "title": "TraceContext",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "traceId",
+    "spanId",
+    "kind"
+  ],
+  "properties": {
+    "traceId": {
+      "type": "string"
+    },
+    "spanId": {
+      "type": "string"
+    },
+    "parentSpanId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "kind": {
+      "enum": [
+        "intent",
+        "mission",
+        "planning",
+        "model.generate",
+        "tool.execute",
+        "delegation",
+        "join",
+        "state.mutation",
+        "git.operation",
+        "artifact",
+        "effect",
+        "verification"
+      ]
+    },
+    "missionRef": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "workRef": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "subjectRef": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "timestamp": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    }
+  }
+}

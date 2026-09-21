@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aftergraph.steward.mission-acceptance.v0.1",
+  "title": "MissionAcceptanceRef",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "acceptanceId",
+    "missionRef",
+    "decision",
+    "criterionResults",
+    "verificationRefs"
+  ],
+  "properties": {
+    "acceptanceId": {
+      "type": "string"
+    },
+    "missionRef": {
+      "type": "string"
+    },
+    "decision": {
+      "enum": [
+        "ACCEPTED",
+        "REJECTED",
+        "INCOMPLETE"
+      ]
+    },
+    "criterionResults": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "criterion",
+          "satisfied"
+        ],
+        "properties": {
+          "criterion": {
+            "type": "string"
+          },
+          "satisfied": {
+            "type": "boolean"
+          },
+          "evidenceRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "verificationRefs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "decidedAt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    }
+  }
+}

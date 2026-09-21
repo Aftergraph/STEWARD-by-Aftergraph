@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aftergraph.steward.intent-envelope.v0.1",
+  "title": "IntentEnvelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "intentId",
+    "principalRef",
+    "message",
+    "createdAt"
+  ],
+  "properties": {
+    "intentId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "principalRef": {
+      "type": "string",
+      "minLength": 1
+    },
+    "projectRef": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "threadRef": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "message": {
+      "type": "string",
+      "minLength": 1
+    },
+    "inputRefs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "requestedCapabilities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "intelligencePreference": {
+      "enum": [
+        "fast",
+        "think",
+        "deep",
+        "research",
+        "team",
+        null
+      ]
+    },
+    "outputPreference": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

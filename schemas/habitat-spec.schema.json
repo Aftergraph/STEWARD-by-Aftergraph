@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aftergraph.steward.habitat-spec.v0.1",
+  "title": "HabitatSpec",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "habitatId",
+    "class",
+    "persistence",
+    "networkPolicy",
+    "authorityRef",
+    "riskControlsRef"
+  ],
+  "properties": {
+    "habitatId": {
+      "type": "string"
+    },
+    "class": {
+      "enum": [
+        "sandbox",
+        "container",
+        "microvm",
+        "vm",
+        "cloud-workspace",
+        "cloud-browser",
+        "desktop",
+        "local-host",
+        "edge",
+        "gpu",
+        "cluster"
+      ]
+    },
+    "locality": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "persistence": {
+      "enum": [
+        "E0_EPHEMERAL",
+        "E1_ATTEMPT",
+        "E2_MISSION",
+        "E3_PROJECT",
+        "E4_BOT",
+        "E5_DEVICE"
+      ]
+    },
+    "resources": {
+      "type": "object"
+    },
+    "filesystem": {
+      "type": "object"
+    },
+    "networkPolicy": {
+      "enum": [
+        "none",
+        "allowlist",
+        "brokered",
+        "restricted"
+      ]
+    },
+    "interfaces": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "checkpointing": {
+      "type": "boolean"
+    },
+    "authorityRef": {
+      "type": "string"
+    },
+    "riskControlsRef": {
+      "type": "string"
+    }
+  }
+}

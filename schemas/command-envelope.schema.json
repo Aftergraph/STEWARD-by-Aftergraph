@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "aftergraph.steward.command-envelope.v0.1",
+  "title": "CommandEnvelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "commandId",
+    "command",
+    "principalRef",
+    "requestedMode",
+    "idempotencyKey"
+  ],
+  "properties": {
+    "commandId": {
+      "type": "string"
+    },
+    "command": {
+      "type": "string",
+      "minLength": 1
+    },
+    "principalRef": {
+      "type": "string"
+    },
+    "projectRef": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "targetRefs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "args": {
+      "type": "object"
+    },
+    "requestedMode": {
+      "enum": [
+        "read",
+        "prepare",
+        "execute"
+      ]
+    },
+    "idempotencyKey": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}
