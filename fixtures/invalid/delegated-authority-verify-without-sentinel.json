@@ -1,0 +1,14 @@
+{
+  "schema_version": "steward.delegated-authority/1.0",
+  "grant_id": "grant-unbound-verifier-000",
+  "grantee_persona_id": "persona-verification-subscriber-v1",
+  "authority_source": {
+    "owner": "aie",
+    "grant_ref": "aie:grant/org-aftergraph/repo-steward/verify-window-000"
+  },
+  "capabilities": ["verify:exact-subject"],
+  "parent_capabilities": ["verify:exact-subject", "repo:read"],
+  "granted_at": "2026-09-21T08:00:00Z",
+  "expires_at": "2026-09-28T08:00:00Z",
+  "status": "granted"
+}
