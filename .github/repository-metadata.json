@@ -1,6 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/Aftergraph/STEWARD-by-Aftergraph/main/.github/repository-metadata.schema.json",
-  "description": "STEWARD by Aftergraph \u2014 persistent governed intelligence system: canonical product/integration root and architecture seed for governed, verifiable autonomous work.",
+  "description": "STEWARD by Aftergraph — persistent governed intelligence system: canonical product/integration root and architecture seed for governed, verifiable autonomous work.",
   "topics": [
     "aftergraph",
     "steward",
