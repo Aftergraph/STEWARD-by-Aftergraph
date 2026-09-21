@@ -1,0 +1,42 @@
+{
+  "schema": "steward.p2.owner-candidate-lock/0.1",
+  "captured_at": "2026-09-21",
+  "source_branch": {
+    "repo": "Aftergraph/STEWARD-by-Aftergraph",
+    "branch": "steward/p2-composed-golden-mission-v0",
+    "head": "35eda6539016a35efccefa0621e08c1a9466a27c"
+  },
+  "candidates": {
+    "works": {
+      "repo": "Aftergraph/works-execution",
+      "pull_request": 127,
+      "base": "78900fc1f6b899445383e7266a1624c036788350",
+      "head": "64cabe65bf210b2c65b525750acb45fc6d53894d",
+      "status": "open"
+    },
+    "runtime": {
+      "repo": "Aftergraph/runtime",
+      "pull_request": 195,
+      "base": "4bff0be654c9e32f62317295d43d7e918139f3e9",
+      "head": "d9c5efb3a74222326ec71b06d5c2df2d4215d68f",
+      "status": "open"
+    },
+    "governance": {
+      "repo": "Aftergraph/after-graph-governance",
+      "issue": 185,
+      "status": "open"
+    }
+  },
+  "proof_boundary": {
+    "candidate_writeback": "staging_only",
+    "production_binding": "absent",
+    "live_p2": "not_proven"
+  },
+  "invariants": [
+    "candidate heads are not frozen main baselines",
+    "open owner PRs are not merged owner truth",
+    "local write/readback is not live production evidence",
+    "execution-context/1.0 is not authority",
+    "completed is not verified"
+  ]
+}
