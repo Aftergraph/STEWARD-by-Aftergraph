@@ -7,6 +7,15 @@ from .runtime import (
     RuntimeContractError,
     RuntimeUnavailableError,
 )
+from .trust_gateway import (
+    TrustGatewayActionRequest,
+    TrustGatewayActionReceipt,
+    TrustGatewayApprovalRequired,
+    TrustGatewayClient,
+    TrustGatewayContractError,
+    TrustGatewayDeniedError,
+    TrustGatewayUnavailableError,
+)
 
 __all__ = [
     "RuntimeDispatchRequest",
@@ -14,4 +23,11 @@ __all__ = [
     "RuntimePort",
     "RuntimeContractError",
     "RuntimeUnavailableError",
+    "TrustGatewayActionRequest",
+    "TrustGatewayActionReceipt",
+    "TrustGatewayApprovalRequired",
+    "TrustGatewayClient",
+    "TrustGatewayContractError",
+    "TrustGatewayDeniedError",
+    "TrustGatewayUnavailableError",
 ]
