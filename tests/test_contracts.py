@@ -31,5 +31,11 @@ class ContractTests(unittest.TestCase):
     def test_work_claim_scope_cannot_be_empty(self):
         self.assertTrue(self._errors(self._schema('work-claim.schema.json'), self._fixture('invalid', 'work-claim-empty-scope.json')))
 
+    def test_valid_presence_projection(self):
+        self.assertEqual([], self._errors(self._schema('presence-projection.schema.json'), self._fixture('valid', 'presence-projection.json')))
+
+    def test_succeeded_presence_requires_verification_verdict(self):
+        self.assertTrue(self._errors(self._schema('presence-projection.schema.json'), self._fixture('invalid', 'presence-projection-succeeded-without-verdict.json')))
+
 if __name__ == '__main__':
     unittest.main()
