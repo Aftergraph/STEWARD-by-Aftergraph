@@ -23,6 +23,14 @@ from .sentinel import (
     SentinelContractError,
     SentinelUnavailableError,
 )
+from .git_subject import (
+    GitWorktreeRequest,
+    GitWorktreeBinding,
+    GitCandidateSubject,
+    GitSubjectPort,
+    GitSubjectContractError,
+    GitSubjectUnavailableError,
+)
 
 __all__ = [
     "RuntimeDispatchRequest",
@@ -42,4 +50,10 @@ __all__ = [
     "SentinelPort",
     "SentinelContractError",
     "SentinelUnavailableError",
+    "GitWorktreeRequest",
+    "GitWorktreeBinding",
+    "GitCandidateSubject",
+    "GitSubjectPort",
+    "GitSubjectContractError",
+    "GitSubjectUnavailableError",
 ]
