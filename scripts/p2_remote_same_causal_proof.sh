@@ -634,5 +634,3 @@ GOEOF
 
 printf '{"schema":"steward.p2.remote-same-causal/0.1","runtime_head":"%s","works_head":"%s","trust_gateway_head":"%s","aie_head":"%s","sentinel_head":"%s","runtime_to_works":"PASS","tg_v21":"PASS","aie_action_time_revalidation":"PASS","works_pdr_correlation":"PASS","governed_remote_git_egress":"PASS","credential_surrogation":"PASS","remote_exact_sha_readback":"PASS","post_effect_subject_binding":"PASS","current_subject_sentinel_ship":"PASS","revocation_fail_closed":"PASS","same_causal_owner_acceptance_readiness":"PASS","isolated_worktree_binding":"absent","production_deployment":"absent"}\n' \
   "$expected_runtime" "$expected_works" "$expected_tg" "$expected_aie" "$expected_sentinel"
-eadback":"PASS","post_effect_subject_binding":"PASS","current_subject_sentinel_ship":"PASS","revocation_fail_closed":"PASS","same_causal_owner_acceptance_readiness":"PASS","isolated_worktree_binding":"absent","production_deployment":"absent"}\n' \
-  "$expected_runtime" "$expected_works" "$expected_tg" "$expected_aie" "$expected_sentinel"
