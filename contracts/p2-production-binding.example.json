@@ -1,0 +1,63 @@
+{
+  "schema": "steward.p2.production-binding/0.1",
+  "execution_plane": "aftergraph-vds-production",
+  "environment": "production",
+  "owners": [
+    {
+      "owner": "runtime",
+      "repository": "Aftergraph/runtime",
+      "expected_sha": "3a1018406f570f04fa40c86d649fe4e8b43db129",
+      "observed_sha": "0000000000000000000000000000000000000000",
+      "mode": "module",
+      "active": false,
+      "deployment_evidence_ref": "UNBOUND",
+      "health_or_invocation_evidence_ref": "UNBOUND"
+    },
+    {
+      "owner": "works",
+      "repository": "Aftergraph/works-execution",
+      "expected_sha": "2365e7aab195fa9ec7bf3e2e56076731a72dbf39",
+      "observed_sha": "0000000000000000000000000000000000000000",
+      "mode": "service",
+      "active": false,
+      "deployment_evidence_ref": "UNBOUND",
+      "health_or_invocation_evidence_ref": "UNBOUND"
+    },
+    {
+      "owner": "trust_gateway",
+      "repository": "Aftergraph/trust-gateway",
+      "expected_sha": "e7a693ea895ae0412f754eea5a291fc8ed3779a3",
+      "observed_sha": "0000000000000000000000000000000000000000",
+      "mode": "service",
+      "active": false,
+      "deployment_evidence_ref": "UNBOUND",
+      "health_or_invocation_evidence_ref": "UNBOUND"
+    },
+    {
+      "owner": "aie",
+      "repository": "Aftergraph/aie",
+      "expected_sha": "4e3514b936d2d65433b6c51901afb56908abd545",
+      "observed_sha": "0000000000000000000000000000000000000000",
+      "mode": "module",
+      "active": false,
+      "deployment_evidence_ref": "UNBOUND",
+      "health_or_invocation_evidence_ref": "UNBOUND"
+    },
+    {
+      "owner": "sentinel",
+      "repository": "Aftergraph/sentinel",
+      "expected_sha": "eb51f824af2279ee3eee5daa8572bd54a34b3ca8",
+      "observed_sha": "0000000000000000000000000000000000000000",
+      "mode": "cli",
+      "active": false,
+      "deployment_evidence_ref": "UNBOUND",
+      "health_or_invocation_evidence_ref": "UNBOUND"
+    }
+  ],
+  "works_durable_state": false,
+  "tg_adapter_runtime_enabled": false,
+  "aie_action_time_revalidation_live": false,
+  "scoped_credential_surrogation_live": false,
+  "remote_git_readback_live": false,
+  "independent_sentinel_live": false
+}
