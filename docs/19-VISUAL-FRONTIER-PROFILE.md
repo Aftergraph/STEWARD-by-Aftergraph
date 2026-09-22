@@ -1,4 +1,4 @@
-# STEWARD Visual Frontier Profile v1.8
+# STEWARD Visual Frontier Profile v1.9
 
 ## Purpose
 
@@ -292,6 +292,44 @@ Browser falsification before source commit `12131e6fe54d8664bb4bb1977073036fbc50
 - Vite client + SSR builds: PASS
 
 The inspector is a presentation and QA surface only. It cannot create authority, approval, execution truth or verification truth.
+
+## Frontier performance evidence
+
+The STEWARD visual runtime now carries measured loading evidence for the current marketing/site surface.
+
+Exact provenance:
+
+- baseline source commit: `5754d67f2144f734f2ebe94fbf909280fd913a17`
+- implementation commit: `443a54adae8397dedb846a926e70f5550fc5fe4c`
+- evidence publish commit: `676f5a4371179daaa25c4005e7f92f99e9fa5fe2`
+- evidence path: `/assets/performance/frontier-performance-v1.json`
+- evidence SHA-256: `eba2656ffc7888124ed99b9913b06a0f48ed10ff0089feaac9652c850e49a5b4`
+
+Measured fixed-viewport local preview result:
+
+| Metric | Before | After |
+| --- | ---: | ---: |
+| initial resource bytes | 7,931,646 | 3,303,805 |
+| resource count | 47 | 16 |
+| below-fold images loaded immediately | 40 | 6 |
+| lazy images | 0 | 39 |
+| WebGL ready | 812 ms | 830 ms |
+
+Initial resource bytes were reduced by **58.35%** while WebGL ready moved by only **+18 ms**.
+
+Correctness after lazy scheduling:
+
+- 41/41 images loaded after scrolling through the page
+- failed images after scroll: 0
+- keyboard role control: PASS
+- keyboard state control: PASS
+- `aria-pressed` synchronization: PASS
+- URL role/state synchronization: PASS
+- WebGL role/state synchronization: PASS
+- console/page errors: 0
+- network errors: 0
+
+This evidence is a fixed local-preview measurement. It does not claim public-edge reachability and does not override the external Higgsfield 401 blocker.
 
 ## Material and signal hierarchy
 
