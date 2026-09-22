@@ -1,6 +1,6 @@
 {
-  "schema_version": "steward.visual-frontier-profile/1.4",
-  "profile_id": "steward-frontier-rev5-inspector-v1-2026-09-22",
+  "schema_version": "steward.visual-frontier-profile/1.5",
+  "profile_id": "steward-frontier-rev5-persona-roles-v1-2026-09-22",
   "identity_owner": "Aftergraph/brand",
   "renderer_owner": "Aftergraph/STEWARD-by-Aftergraph",
   "source_scene": {
@@ -161,6 +161,49 @@
       "inspector_state_sync": true,
       "hero_state_sync": true,
       "single_pressed_control": true,
+      "console_errors_zero": true,
+      "network_errors_zero": true
+    }
+  },
+  "persona_roles": {
+    "schema_version": "steward.persona-role-assets/1.0",
+    "manifest_path": "/assets/persona-roles/manifest-v1.json",
+    "manifest_sha256": "7ba7453e8c6ef610dee90aa74fc4966da83c5e425cfd9972e50c2152571bba09",
+    "source_revision": 5,
+    "source_commit": "b88ce626ea5f7aa70439da71600c25a9a6e24c27",
+    "role_source": "actor-persona.schema.json#/properties/role/enum",
+    "roles": [
+      "reviewer",
+      "subscriber",
+      "maintainer",
+      "observer",
+      "auditor",
+      "integrator"
+    ],
+    "accent_tokens": {
+      "reviewer": "control_cyan",
+      "subscriber": "system_blue",
+      "maintainer": "steward_copper",
+      "observer": "slate",
+      "auditor": "pine_teal",
+      "integrator": "decision_amber"
+    },
+    "asset_sha256": {
+      "reviewer": "e9b0584460df8327637be86547c4e651d8e6d510e741e6b6ee0ec839c9886e43",
+      "subscriber": "142cf25dae5e8670419b235acda47fc1a673850935a93e48063d07bfe4c42fcf",
+      "maintainer": "4fc5224603856a3ef4ad7590c8fcae621754b523f3740c4d38ac5e9bd1c1a6a6",
+      "observer": "4e095f08ba7ddfed7049c3bfdb372bc22321978bf14d9243ff07d375fcb109e3",
+      "auditor": "4210bdf6596dbdcbaa8372b1440149a0ad5bd290d8940ec2b0292d16752ffbd9",
+      "integrator": "76f086970bcff1aa122a90be118018157dbaba2b2ff5899474b489e96ec1ad33"
+    },
+    "authority_effect": false,
+    "verification_effect": false,
+    "qa": {
+      "asset_integrity": true,
+      "all_roles": true,
+      "desktop": true,
+      "mobile": true,
+      "legacy_role_assets_absent": true,
       "console_errors_zero": true,
       "network_errors_zero": true
     }

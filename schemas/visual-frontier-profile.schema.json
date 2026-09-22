@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://aftergraph.org/schemas/steward-visual-frontier-profile-1.4.json",
-  "title": "STEWARD Visual Frontier Profile 1.4",
+  "$id": "https://aftergraph.org/schemas/steward-visual-frontier-profile-1.5.json",
+  "title": "STEWARD Visual Frontier Profile 1.5",
   "description": "Renderer/evidence profile for STEWARD presence. It is presentation-only and does not own brand identity, authority, execution truth, or verification truth.",
   "type": "object",
   "additionalProperties": false,
@@ -16,11 +16,12 @@
     "compact_presence",
     "motion_runtime",
     "presence_inspector",
+    "persona_roles",
     "presentation_boundary"
   ],
   "properties": {
     "schema_version": {
-      "const": "steward.visual-frontier-profile/1.4"
+      "const": "steward.visual-frontier-profile/1.5"
     },
     "profile_id": {
       "type": "string",
@@ -623,6 +624,166 @@
               "const": true
             },
             "single_pressed_control": {
+              "const": true
+            },
+            "console_errors_zero": {
+              "const": true
+            },
+            "network_errors_zero": {
+              "const": true
+            }
+          }
+        }
+      }
+    },
+    "persona_roles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "manifest_path",
+        "manifest_sha256",
+        "source_revision",
+        "source_commit",
+        "role_source",
+        "roles",
+        "accent_tokens",
+        "asset_sha256",
+        "authority_effect",
+        "verification_effect",
+        "qa"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "steward.persona-role-assets/1.0"
+        },
+        "manifest_path": {
+          "const": "/assets/persona-roles/manifest-v1.json"
+        },
+        "manifest_sha256": {
+          "const": "7ba7453e8c6ef610dee90aa74fc4966da83c5e425cfd9972e50c2152571bba09"
+        },
+        "source_revision": {
+          "const": 5
+        },
+        "source_commit": {
+          "const": "b88ce626ea5f7aa70439da71600c25a9a6e24c27"
+        },
+        "role_source": {
+          "const": "actor-persona.schema.json#/properties/role/enum"
+        },
+        "roles": {
+          "type": "array",
+          "uniqueItems": true,
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {
+            "enum": [
+              "reviewer",
+              "subscriber",
+              "maintainer",
+              "observer",
+              "auditor",
+              "integrator"
+            ]
+          }
+        },
+        "accent_tokens": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "reviewer",
+            "subscriber",
+            "maintainer",
+            "observer",
+            "auditor",
+            "integrator"
+          ],
+          "properties": {
+            "reviewer": {
+              "const": "control_cyan"
+            },
+            "subscriber": {
+              "const": "system_blue"
+            },
+            "maintainer": {
+              "const": "steward_copper"
+            },
+            "observer": {
+              "const": "slate"
+            },
+            "auditor": {
+              "const": "pine_teal"
+            },
+            "integrator": {
+              "const": "decision_amber"
+            }
+          }
+        },
+        "asset_sha256": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "reviewer",
+            "subscriber",
+            "maintainer",
+            "observer",
+            "auditor",
+            "integrator"
+          ],
+          "properties": {
+            "reviewer": {
+              "const": "e9b0584460df8327637be86547c4e651d8e6d510e741e6b6ee0ec839c9886e43"
+            },
+            "subscriber": {
+              "const": "142cf25dae5e8670419b235acda47fc1a673850935a93e48063d07bfe4c42fcf"
+            },
+            "maintainer": {
+              "const": "4fc5224603856a3ef4ad7590c8fcae621754b523f3740c4d38ac5e9bd1c1a6a6"
+            },
+            "observer": {
+              "const": "4e095f08ba7ddfed7049c3bfdb372bc22321978bf14d9243ff07d375fcb109e3"
+            },
+            "auditor": {
+              "const": "4210bdf6596dbdcbaa8372b1440149a0ad5bd290d8940ec2b0292d16752ffbd9"
+            },
+            "integrator": {
+              "const": "76f086970bcff1aa122a90be118018157dbaba2b2ff5899474b489e96ec1ad33"
+            }
+          }
+        },
+        "authority_effect": {
+          "const": false
+        },
+        "verification_effect": {
+          "const": false
+        },
+        "qa": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "asset_integrity",
+            "all_roles",
+            "desktop",
+            "mobile",
+            "legacy_role_assets_absent",
+            "console_errors_zero",
+            "network_errors_zero"
+          ],
+          "properties": {
+            "asset_integrity": {
+              "const": true
+            },
+            "all_roles": {
+              "const": true
+            },
+            "desktop": {
+              "const": true
+            },
+            "mobile": {
+              "const": true
+            },
+            "legacy_role_assets_absent": {
               "const": true
             },
             "console_errors_zero": {

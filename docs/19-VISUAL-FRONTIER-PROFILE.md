@@ -1,4 +1,4 @@
-# STEWARD Visual Frontier Profile v1.4
+# STEWARD Visual Frontier Profile v1.5
 
 ## Purpose
 
@@ -146,6 +146,54 @@ Falsification evidence before source commit `4c71ce1322281056c70dd896abefc03936f
 
 Motion remains a projection. A motion, pose, color or halo pulse cannot create authority, approval, execution truth or verification truth.
 
+## Actor persona visual grammar
+
+STEWARD's visual role system now follows the canonical actor-persona contract instead of the earlier Guide / Forge / Sentinel artwork taxonomy.
+
+Contract:
+
+- visual asset schema: `steward.persona-role-assets/1.0`
+- role source: `actor-persona.schema.json#/properties/role/enum`
+- website source commit: `b88ce626ea5f7aa70439da71600c25a9a6e24c27`
+- manifest: `/assets/persona-roles/manifest-v1.json`
+- manifest SHA-256: `7ba7453e8c6ef610dee90aa74fc4966da83c5e425cfd9972e50c2152571bba09`
+- 3D source revision: `5`
+- geometry changed: **false**
+
+Canonical roles:
+
+| Role | Accent token | Visual meaning |
+| --- | --- | --- |
+| reviewer | control_cyan | bounded contract/schema/code review |
+| subscriber | system_blue | routed verification/security/progress attention |
+| maintainer | steward_copper | maintenance and merge decision projection |
+| observer | slate | read-only observation |
+| auditor | pine_teal | evidence/trace inspection |
+| integrator | decision_amber | cross-owner contract integration |
+
+All six assets are renders of the same `STEWARD_Rig` revision 5. Role differences are limited to pose and restrained semantic accent; no role changes identity or grants capability.
+
+The former site copy said “five roles” and old assets used Guide / Forge / Sentinel. Those are not promoted into the governed persona surface. The governed surface now contains exactly the six actor-persona roles from the schema.
+
+Hard boundary:
+
+- `authority_effect = false`
+- `verification_effect = false`
+
+A maintainer visual does not merge. An auditor visual does not verify. A reviewer visual does not authorize. Persona selection remains downstream of AIE, Trust Gateway and Sentinel.
+
+QA for website source `b88ce626ea5f7aa70439da71600c25a9a6e24c27`:
+
+- persona manifest + six asset SHA integrity: PASS
+- 6/6 canonical roles rendered: PASS
+- desktop browser QA: PASS
+- mobile + reduced-motion browser QA: PASS
+- legacy Guide / Forge / Sentinel assets in governed persona surface: 0
+- page/console errors: 0
+- network errors: 0
+- TypeScript: PASS
+- Vite client + SSR builds: PASS
+
 ## Governed presence inspector
 
 The Blueprint surface now exposes the twelve canonical visual states as interactive controls without creating a second state machine.
@@ -245,7 +293,7 @@ Before push of source commit `a25fa626979b3f938e9cec232cbaef52771e9db3`:
 - desktop WebGL: PASS
 - mobile + reduced motion: PASS
 - forced GLB failure → rev5 idle fallback: PASS
-- normal browser console/page errors: 0\n- compact presence asset SHA integrity: PASS\n- compact presence desktop/mobile browser QA: PASS\n- 12-state motion grammar browser QA: PASS\n- reduced-motion pixel stability: PASS\n- normal-motion pixel change: PASS\n- auto-sequence advancement: PASS\n- governed presence inspector 12/12 control sync: PASS
+- normal browser console/page errors: 0\n- compact presence asset SHA integrity: PASS\n- compact presence desktop/mobile browser QA: PASS\n- 12-state motion grammar browser QA: PASS\n- reduced-motion pixel stability: PASS\n- normal-motion pixel change: PASS\n- auto-sequence advancement: PASS\n- governed presence inspector 12/12 control sync: PASS\n- actor persona visual parity 6/6: PASS
 
 ## Current delivery observation
 
