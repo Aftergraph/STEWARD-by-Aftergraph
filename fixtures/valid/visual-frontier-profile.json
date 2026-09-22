@@ -1,6 +1,6 @@
 {
-  "schema_version": "steward.visual-frontier-profile/1.3",
-  "profile_id": "steward-frontier-rev5-motion-v2-2026-09-21",
+  "schema_version": "steward.visual-frontier-profile/1.4",
+  "profile_id": "steward-frontier-rev5-inspector-v1-2026-09-22",
   "identity_owner": "Aftergraph/brand",
   "renderer_owner": "Aftergraph/STEWARD-by-Aftergraph",
   "source_scene": {
@@ -144,6 +144,25 @@
       "reduced_pixels_stable": true,
       "auto_sequence_advanced": true,
       "console_errors_zero": true
+    }
+  },
+  "presence_inspector": {
+    "surface_id": "steward.presence-inspector/1.0",
+    "source_commit": "12131e6fe54d8664bb4bb1977073036fbc50bb6a",
+    "state_source": "motion_runtime.states",
+    "motion_source": "motion_runtime.motions",
+    "control_count": 12,
+    "router_search_key": "presence",
+    "hero_binding": "StewardThreeHero.mode",
+    "truth_boundary_copy": "Visual preview only · canonical state is untouched",
+    "qa": {
+      "all_controls": true,
+      "url_state_sync": true,
+      "inspector_state_sync": true,
+      "hero_state_sync": true,
+      "single_pressed_control": true,
+      "console_errors_zero": true,
+      "network_errors_zero": true
     }
   }
 }

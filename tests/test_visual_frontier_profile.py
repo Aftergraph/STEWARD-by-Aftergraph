@@ -139,6 +139,35 @@ class VisualFrontierProfileTests(unittest.TestCase):
         qa = self._read("fixtures/valid/visual-frontier-profile.json")["motion_runtime"]["qa"]
         self.assertTrue(all(qa.values()))
 
+    def test_presence_inspector_binds_only_to_existing_motion_runtime(self):
+        profile = self._read("fixtures/valid/visual-frontier-profile.json")
+        inspector = profile["presence_inspector"]
+        motion = profile["motion_runtime"]
+        self.assertEqual("steward.presence-inspector/1.0", inspector["surface_id"])
+        self.assertEqual("12131e6fe54d8664bb4bb1977073036fbc50bb6a", inspector["source_commit"])
+        self.assertEqual("motion_runtime.states", inspector["state_source"])
+        self.assertEqual("motion_runtime.motions", inspector["motion_source"])
+        self.assertEqual(len(motion["states"]), inspector["control_count"])
+        self.assertEqual(12, inspector["control_count"])
+        self.assertEqual("presence", inspector["router_search_key"])
+        self.assertEqual("StewardThreeHero.mode", inspector["hero_binding"])
+
+    def test_presence_inspector_is_explicitly_projection_only(self):
+        profile = self._read("fixtures/valid/visual-frontier-profile.json")
+        inspector = profile["presence_inspector"]
+        self.assertEqual(
+            "Visual preview only · canonical state is untouched",
+            inspector["truth_boundary_copy"],
+        )
+        self.assertFalse(profile["presentation_boundary"]["canonical_truth"])
+        self.assertFalse(profile["presentation_boundary"]["authority_effect"])
+        self.assertFalse(profile["presentation_boundary"]["verification_effect"])
+
+    def test_presence_inspector_qa_evidence_is_complete(self):
+        qa = self._read("fixtures/valid/visual-frontier-profile.json")["presence_inspector"]["qa"]
+        self.assertEqual(7, len(qa))
+        self.assertTrue(all(qa.values()))
+
 
 if __name__ == "__main__":
     unittest.main()
