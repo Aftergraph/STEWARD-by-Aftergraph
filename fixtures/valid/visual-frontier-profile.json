@@ -1,6 +1,6 @@
 {
-  "schema_version": "steward.visual-frontier-profile/1.7",
-  "profile_id": "steward-frontier-rev5-role-state-composition-v2-2026-09-22",
+  "schema_version": "steward.visual-frontier-profile/1.8",
+  "profile_id": "steward-frontier-rev5-role-state-observed-v1-2026-09-22",
   "identity_owner": "Aftergraph/brand",
   "renderer_owner": "Aftergraph/STEWARD-by-Aftergraph",
   "source_scene": {
@@ -260,6 +260,9 @@
       "forced_glb_fallback_pass": true,
       "console_errors_zero": true,
       "network_errors_zero": true
-    }
+    },
+    "evidence_path": "/assets/motion/persona-role-accessories-v1.evidence.json",
+    "evidence_sha256": "b0d4bb0f540ddd137938418ee6d50b7fb75177c06ab4e446e76bdd56bb948c0a",
+    "evidence_publish_commit": "5754d67f2144f734f2ebe94fbf909280fd913a17"
   }
 }
