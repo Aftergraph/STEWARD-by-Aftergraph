@@ -1,6 +1,6 @@
 {
-  "schema_version": "steward.visual-frontier-profile/1.6",
-  "profile_id": "steward-frontier-rev5-role-state-composition-v1-2026-09-22",
+  "schema_version": "steward.visual-frontier-profile/1.7",
+  "profile_id": "steward-frontier-rev5-persona-accessories-v1-2026-09-22",
   "identity_owner": "Aftergraph/brand",
   "renderer_owner": "Aftergraph/STEWARD-by-Aftergraph",
   "source_scene": {
@@ -242,6 +242,63 @@
       "combinations_checked": 72,
       "all_combinations_pass": true,
       "no_role_fallback_pass": true,
+      "console_errors_zero": true,
+      "network_errors_zero": true
+    }
+  },
+  "persona_accessory_runtime": {
+    "schema_version": "steward.persona-role-accessory-runtime/1.0",
+    "contract_owner": "Aftergraph/brand",
+    "role_contract": "steward.persona-role-visual/1.0",
+    "manifest_path": "/assets/motion/persona-role-accessories-v1.json",
+    "manifest_sha256": "37c62a36e7b8fba3e609a102a5a8fc68c5a8cec6a57bcdc9329aa46cde38d10e",
+    "source_commit": "02d7095b657c6ffaf98f0d204f2cdcb67d811bed",
+    "source_revision": 5,
+    "rig": "STEWARD_Rig",
+    "anchor": "badge",
+    "roles": [
+      "reviewer",
+      "subscriber",
+      "maintainer",
+      "observer",
+      "auditor",
+      "integrator"
+    ],
+    "accessories": {
+      "reviewer": "review-check",
+      "subscriber": "attention-signal",
+      "maintainer": "maintenance-tool",
+      "observer": "read-only-lens",
+      "auditor": "evidence-lens",
+      "integrator": "contract-bridge"
+    },
+    "role_channel": [
+      "badge_accent",
+      "functional_accessory"
+    ],
+    "state_channel": [
+      "pose",
+      "eyes",
+      "custody_node",
+      "halo_nodes",
+      "rim_signal"
+    ],
+    "identity_channel": [
+      "core_silhouette",
+      "visor",
+      "halo_geometry",
+      "custody_ring_geometry"
+    ],
+    "fallback": "state-semantic-priority",
+    "canonical_truth": false,
+    "authority_effect": false,
+    "verification_effect": false,
+    "qa": {
+      "roles_checked": 6,
+      "unique_role_render_hashes": 6,
+      "critical_state_priority_cases": 4,
+      "reduced_motion": true,
+      "forced_glb_fallback": true,
       "console_errors_zero": true,
       "network_errors_zero": true
     }
