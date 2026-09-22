@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://aftergraph.org/schemas/steward-visual-frontier-profile-1.6.json",
-  "title": "STEWARD Visual Frontier Profile 1.6",
+  "$id": "https://aftergraph.org/schemas/steward-visual-frontier-profile-1.7.json",
+  "title": "STEWARD Visual Frontier Profile 1.7",
   "description": "Renderer/evidence profile for STEWARD presence. It is presentation-only and does not own brand identity, authority, execution truth, or verification truth.",
   "type": "object",
   "additionalProperties": false,
@@ -22,7 +22,7 @@
   ],
   "properties": {
     "schema_version": {
-      "const": "steward.visual-frontier-profile/1.6"
+      "const": "steward.visual-frontier-profile/1.7"
     },
     "profile_id": {
       "type": "string",
@@ -802,6 +802,7 @@
       "additionalProperties": false,
       "required": [
         "schema_version",
+        "accessory_runtime_id",
         "manifest_path",
         "manifest_sha256",
         "source_commit",
@@ -811,8 +812,10 @@
         "state_count",
         "combination_count",
         "role_channel",
+        "role_accessories",
         "state_channel",
         "identity_channel",
+        "runtime_strategy",
         "fallback",
         "canonical_truth",
         "authority_effect",
@@ -824,13 +827,13 @@
           "const": "steward.role-state-composition/1.0"
         },
         "manifest_path": {
-          "const": "/assets/motion/role-state-composition-v1.json"
+          "const": "/assets/motion/persona-role-accessories-v1.json"
         },
         "manifest_sha256": {
-          "const": "629fa301a67ddb30fd047d73f0892cd3dc08f76616b49659f701fcaeb941cc2b"
+          "const": "6d726e68640d7b05603586598771100f79f655af51bfd3af0d3dbc4e542d77b6"
         },
         "source_commit": {
-          "const": "4f01ab0b298b83d6a9033e68c758d0a5e24bece2"
+          "const": "e91a8a73d3f29f46c30ee165140ac9c81b4dd32a"
         },
         "role_source": {
           "const": "persona_roles.roles"
@@ -849,11 +852,27 @@
         },
         "role_channel": {
           "type": "array",
-          "minItems": 1,
-          "maxItems": 1,
+          "uniqueItems": true,
+          "minItems": 2,
+          "maxItems": 2,
           "items": {
-            "const": "badge_accent"
-          }
+            "enum": [
+              "badge_accent",
+              "functional_accessory"
+            ]
+          },
+          "allOf": [
+            {
+              "contains": {
+                "const": "badge_accent"
+              }
+            },
+            {
+              "contains": {
+                "const": "functional_accessory"
+              }
+            }
+          ]
         },
         "state_channel": {
           "type": "array",
@@ -903,6 +922,11 @@
             "combinations_checked",
             "all_combinations_pass",
             "no_role_fallback_pass",
+            "runtime_reuse_pass",
+            "glb_loads_per_role_session",
+            "unique_role_render_hashes",
+            "critical_reduced_motion_cases",
+            "forced_glb_fallback_pass",
             "console_errors_zero",
             "network_errors_zero"
           ],
@@ -916,6 +940,21 @@
             "no_role_fallback_pass": {
               "const": true
             },
+            "runtime_reuse_pass": {
+              "const": true
+            },
+            "glb_loads_per_role_session": {
+              "const": 1
+            },
+            "unique_role_render_hashes": {
+              "const": 6
+            },
+            "critical_reduced_motion_cases": {
+              "const": 4
+            },
+            "forced_glb_fallback_pass": {
+              "const": true
+            },
             "console_errors_zero": {
               "const": true
             },
@@ -923,6 +962,44 @@
               "const": true
             }
           }
+        },
+        "accessory_runtime_id": {
+          "const": "steward.persona-role-accessory-runtime/1.0"
+        },
+        "role_accessories": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "reviewer",
+            "subscriber",
+            "maintainer",
+            "observer",
+            "auditor",
+            "integrator"
+          ],
+          "properties": {
+            "reviewer": {
+              "const": "review-check"
+            },
+            "subscriber": {
+              "const": "attention-signal"
+            },
+            "maintainer": {
+              "const": "maintenance-tool"
+            },
+            "observer": {
+              "const": "read-only-lens"
+            },
+            "auditor": {
+              "const": "evidence-lens"
+            },
+            "integrator": {
+              "const": "contract-bridge"
+            }
+          }
+        },
+        "runtime_strategy": {
+          "const": "single-boot-live-composition"
         }
       }
     }
