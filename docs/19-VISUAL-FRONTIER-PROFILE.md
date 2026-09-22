@@ -1,4 +1,4 @@
-# STEWARD Visual Frontier Profile v1.7
+# STEWARD Visual Frontier Profile v1.8
 
 ## Purpose
 
@@ -154,8 +154,12 @@ Contract:
 
 - composition schema/runtime: `steward.role-state-composition/1.0`
 - role accessory runtime: `steward.persona-role-accessory-runtime/1.0`
-- website source commit: `e91a8a73d3f29f46c30ee165140ac9c81b4dd32a`
+- implementation source commit: `e91a8a73d3f29f46c30ee165140ac9c81b4dd32a`
+- observed runtime head: `41081850a68b358b9313897adcd763455f69285c`
+- evidence publish commit: `5754d67f2144f734f2ebe94fbf909280fd913a17`
 - manifest: `/assets/motion/persona-role-accessories-v1.json`
+- evidence: `/assets/motion/persona-role-accessories-v1.evidence.json`
+- evidence SHA-256: `b0d4bb0f540ddd137938418ee6d50b7fb75177c06ab4e446e76bdd56bb948c0a`
 - manifest SHA-256: `6d726e68640d7b05603586598771100f79f655af51bfd3af0d3dbc4e542d77b6`
 - role source: `persona_roles.roles`
 - state source: `motion_runtime.states`
@@ -183,7 +187,7 @@ Role changes replace only the role accessory/badge channel. State changes contin
 
 If WebGL fails, fallback uses **state-semantic priority**: the static state asset preserves the decision-relevant state while the role accessory may be omitted rather than fabricating a combined fallback.
 
-Falsification for website source `e91a8a73d3f29f46c30ee165140ac9c81b4dd32a`:
+Observed falsification on runtime head `41081850a68b358b9313897adcd763455f69285c`, published as evidence commit `5754d67f2144f734f2ebe94fbf909280fd913a17`:
 
 - all 72 role × state combinations: PASS
 - typed URL role/state parity: PASS 72/72
