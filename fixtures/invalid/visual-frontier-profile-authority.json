@@ -1,6 +1,6 @@
 {
-  "schema_version": "steward.visual-frontier-profile/1.6",
-  "profile_id": "steward-frontier-rev5-role-state-composition-v1-2026-09-22",
+  "schema_version": "steward.visual-frontier-profile/1.7",
+  "profile_id": "steward-frontier-rev5-role-state-composition-v2-2026-09-22",
   "identity_owner": "Aftergraph/brand",
   "renderer_owner": "Aftergraph/STEWARD-by-Aftergraph",
   "source_scene": {
@@ -210,17 +210,27 @@
   },
   "role_state_composition": {
     "schema_version": "steward.role-state-composition/1.0",
-    "manifest_path": "/assets/motion/role-state-composition-v1.json",
-    "manifest_sha256": "629fa301a67ddb30fd047d73f0892cd3dc08f76616b49659f701fcaeb941cc2b",
-    "source_commit": "4f01ab0b298b83d6a9033e68c758d0a5e24bece2",
+    "accessory_runtime_id": "steward.persona-role-accessory-runtime/1.0",
+    "manifest_path": "/assets/motion/persona-role-accessories-v1.json",
+    "manifest_sha256": "6d726e68640d7b05603586598771100f79f655af51bfd3af0d3dbc4e542d77b6",
+    "source_commit": "e91a8a73d3f29f46c30ee165140ac9c81b4dd32a",
     "role_source": "persona_roles.roles",
     "state_source": "motion_runtime.states",
     "role_count": 6,
     "state_count": 12,
     "combination_count": 72,
     "role_channel": [
-      "badge_accent"
+      "badge_accent",
+      "functional_accessory"
     ],
+    "role_accessories": {
+      "reviewer": "review-check",
+      "subscriber": "attention-signal",
+      "maintainer": "maintenance-tool",
+      "observer": "read-only-lens",
+      "auditor": "evidence-lens",
+      "integrator": "contract-bridge"
+    },
     "state_channel": [
       "pose",
       "eyes",
@@ -234,6 +244,7 @@
       "halo_geometry",
       "custody_ring_geometry"
     ],
+    "runtime_strategy": "single-boot-live-composition",
     "fallback": "state-semantic-priority",
     "canonical_truth": false,
     "authority_effect": false,
@@ -242,6 +253,11 @@
       "combinations_checked": 72,
       "all_combinations_pass": true,
       "no_role_fallback_pass": true,
+      "runtime_reuse_pass": true,
+      "glb_loads_per_role_session": 1,
+      "unique_role_render_hashes": 6,
+      "critical_reduced_motion_cases": 4,
+      "forced_glb_fallback_pass": true,
       "console_errors_zero": true,
       "network_errors_zero": true
     }

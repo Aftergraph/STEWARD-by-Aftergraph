@@ -232,7 +232,7 @@ class VisualFrontierProfileTests(unittest.TestCase):
 
     def test_role_and_state_visual_channels_are_orthogonal(self):
         composition = self._read("fixtures/valid/visual-frontier-profile.json")["role_state_composition"]
-        self.assertEqual(["badge_accent"], composition["role_channel"])
+        self.assertEqual(["badge_accent", "functional_accessory"], composition["role_channel"])
         self.assertEqual(
             ["pose", "eyes", "custody_node", "halo_nodes", "rim_signal"],
             composition["state_channel"],
@@ -249,14 +249,27 @@ class VisualFrontierProfileTests(unittest.TestCase):
         profile = self._read("fixtures/valid/visual-frontier-profile.json")
         composition = profile["role_state_composition"]
         self.assertEqual("steward.role-state-composition/1.0", composition["schema_version"])
-        self.assertEqual("/assets/motion/role-state-composition-v1.json", composition["manifest_path"])
+        self.assertEqual("/assets/motion/persona-role-accessories-v1.json", composition["manifest_path"])
         self.assertEqual(
-            "629fa301a67ddb30fd047d73f0892cd3dc08f76616b49659f701fcaeb941cc2b",
+            "6d726e68640d7b05603586598771100f79f655af51bfd3af0d3dbc4e542d77b6",
             composition["manifest_sha256"],
         )
         self.assertEqual(
-            "4f01ab0b298b83d6a9033e68c758d0a5e24bece2",
+            "e91a8a73d3f29f46c30ee165140ac9c81b4dd32a",
             composition["source_commit"],
+        )
+        self.assertEqual("steward.persona-role-accessory-runtime/1.0", composition["accessory_runtime_id"])
+        self.assertEqual("single-boot-live-composition", composition["runtime_strategy"])
+        self.assertEqual(
+            {
+                "reviewer": "review-check",
+                "subscriber": "attention-signal",
+                "maintainer": "maintenance-tool",
+                "observer": "read-only-lens",
+                "auditor": "evidence-lens",
+                "integrator": "contract-bridge",
+            },
+            composition["role_accessories"],
         )
         self.assertEqual("state-semantic-priority", composition["fallback"])
         self.assertFalse(composition["canonical_truth"])
@@ -268,6 +281,11 @@ class VisualFrontierProfileTests(unittest.TestCase):
         self.assertEqual(72, qa["combinations_checked"])
         self.assertTrue(qa["all_combinations_pass"])
         self.assertTrue(qa["no_role_fallback_pass"])
+        self.assertTrue(qa["runtime_reuse_pass"])
+        self.assertEqual(1, qa["glb_loads_per_role_session"])
+        self.assertEqual(6, qa["unique_role_render_hashes"])
+        self.assertEqual(4, qa["critical_reduced_motion_cases"])
+        self.assertTrue(qa["forced_glb_fallback_pass"])
         self.assertTrue(qa["console_errors_zero"])
         self.assertTrue(qa["network_errors_zero"])
 
