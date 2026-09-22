@@ -1,4 +1,4 @@
-# STEWARD Visual Frontier Profile v1.6
+# STEWARD Visual Frontier Profile v1.7
 
 ## Purpose
 
@@ -192,6 +192,63 @@ Hard boundary:
 
 A reviewer+approving visual is not an approval. A maintainer+succeeded visual is not a merge or verification verdict. The composition remains a projection of independently owned truth.
 
+## Functional role accessory runtime
+
+The six canonical actor roles now carry a subtle functional accessory on the same revision-5 WebGL rig. This closes the gap between the Brand OS persona contract and the live renderer without creating separate characters.
+
+Contract:
+
+- schema: `steward.persona-role-accessory-runtime/1.0`
+- contract owner: `Aftergraph/brand`
+- role contract: `steward.persona-role-visual/1.0`
+- runtime manifest: `/assets/motion/persona-role-accessories-v1.json`
+- manifest SHA-256: `37c62a36e7b8fba3e609a102a5a8fc68c5a8cec6a57bcdc9329aa46cde38d10e`
+- website source commit: `02d7095b657c6ffaf98f0d204f2cdcb67d811bed`
+- source rig: `STEWARD_Rig`, revision 5
+- rig anchor: `badge`
+
+Canonical role accessories:
+
+| Role | Functional accessory |
+| --- | --- |
+| reviewer | review-check |
+| subscriber | attention-signal |
+| maintainer | maintenance-tool |
+| observer | read-only-lens |
+| auditor | evidence-lens |
+| integrator | contract-bridge |
+
+The accessories are small Three.js geometry groups parented to the actual `badge` rig node. If a role is selected and that anchor cannot be found, WebGL initialization fails closed instead of silently presenting an unbound role visual.
+
+Channel ownership remains orthogonal:
+
+- role: `badge_accent · functional_accessory`
+- state: `pose · eyes · custody_node · halo_nodes · rim_signal`
+- identity: `core_silhouette · visor · halo_geometry · custody_ring_geometry`
+
+A role accessory never replaces a decision-relevant state signal. If WebGL is unavailable, fallback keeps **state-semantic priority** and may omit the role accessory rather than fabricate a combined static truth.
+
+Falsification for website source `02d7095b657c6ffaf98f0d204f2cdcb67d811bed`:
+
+- 6/6 role accessories mounted on the rig: PASS
+- six role previews produced six distinct render hashes: PASS
+- critical state priority cases (approval, verifying, succeeded, failed): 4/4 PASS
+- no-role state behavior preserved: PASS
+- reduced-motion role + state projection: PASS
+- forced GLB failure preserves static state fallback and omits unmounted accessory: PASS
+- TypeScript: PASS
+- Vite client + SSR builds: PASS
+- page/console errors: 0
+- network errors: 0
+
+Hard boundary:
+
+- `canonical_truth = false`
+- `authority_effect = false`
+- `verification_effect = false`
+
+A wrench-shaped maintainer accessory does not create merge authority. An evidence-lens auditor accessory does not verify. A review-check accessory does not approve.
+
 ## Actor persona visual grammar
 
 STEWARD's visual role system now follows the canonical actor-persona contract instead of the earlier Guide / Forge / Sentinel artwork taxonomy.
@@ -340,6 +397,7 @@ Before push of source commit `a25fa626979b3f938e9cec232cbaef52771e9db3`:
 - mobile + reduced motion: PASS
 - forced GLB failure → rev5 idle fallback: PASS
 - normal browser console/page errors: 0\n- compact presence asset SHA integrity: PASS\n- compact presence desktop/mobile browser QA: PASS\n- 12-state motion grammar browser QA: PASS\n- reduced-motion pixel stability: PASS\n- normal-motion pixel change: PASS\n- auto-sequence advancement: PASS\n- governed presence inspector 12/12 control sync: PASS\n- actor persona visual parity 6/6: PASS\n- role × state composition matrix 72/72: PASS
+- persona functional accessory runtime 6/6: PASS
 
 ## Current delivery observation
 
