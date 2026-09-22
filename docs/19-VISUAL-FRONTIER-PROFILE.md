@@ -1,4 +1,4 @@
-# STEWARD Visual Frontier Profile v1.3
+# STEWARD Visual Frontier Profile v1.4
 
 ## Purpose
 
@@ -146,6 +146,40 @@ Falsification evidence before source commit `4c71ce1322281056c70dd896abefc03936f
 
 Motion remains a projection. A motion, pose, color or halo pulse cannot create authority, approval, execution truth or verification truth.
 
+## Governed presence inspector
+
+The Blueprint surface now exposes the twelve canonical visual states as interactive controls without creating a second state machine.
+
+Binding:
+
+- surface: `steward.presence-inspector/1.0`
+- website source commit: `12131e6fe54d8664bb4bb1977073036fbc50bb6a`
+- state source: `motion_runtime.states`
+- motion source: `motion_runtime.motions`
+- router search key: `presence`
+- live hero binding: `StewardThreeHero.mode`
+- controls: `12`
+
+Selecting a control updates typed router search state and drives the same WebGL presence runtime used by the hero. The inspector does not own or infer canonical state.
+
+The UI carries the explicit boundary:
+
+> Visual preview only · canonical state is untouched
+
+Browser falsification before source commit `12131e6fe54d8664bb4bb1977073036fbc50bb6a`:
+
+- 12/12 controls selectable: PASS
+- URL `presence` state synchronized for all 12 controls: PASS
+- inspector selected state synchronized for all 12 controls: PASS
+- live WebGL hero `data-presence-state` synchronized for all 12 controls: PASS
+- exactly one `aria-pressed=true` control after selection: PASS
+- page/console errors: 0
+- network errors: 0
+- TypeScript: PASS
+- Vite client + SSR builds: PASS
+
+The inspector is a presentation and QA surface only. It cannot create authority, approval, execution truth or verification truth.
+
 ## Material and signal hierarchy
 
 | Role | Rendering intent |
@@ -211,7 +245,7 @@ Before push of source commit `a25fa626979b3f938e9cec232cbaef52771e9db3`:
 - desktop WebGL: PASS
 - mobile + reduced motion: PASS
 - forced GLB failure → rev5 idle fallback: PASS
-- normal browser console/page errors: 0\n- compact presence asset SHA integrity: PASS\n- compact presence desktop/mobile browser QA: PASS\n- 12-state motion grammar browser QA: PASS\n- reduced-motion pixel stability: PASS\n- normal-motion pixel change: PASS\n- auto-sequence advancement: PASS
+- normal browser console/page errors: 0\n- compact presence asset SHA integrity: PASS\n- compact presence desktop/mobile browser QA: PASS\n- 12-state motion grammar browser QA: PASS\n- reduced-motion pixel stability: PASS\n- normal-motion pixel change: PASS\n- auto-sequence advancement: PASS\n- governed presence inspector 12/12 control sync: PASS
 
 ## Current delivery observation
 
