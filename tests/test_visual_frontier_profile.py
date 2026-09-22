@@ -217,6 +217,60 @@ class VisualFrontierProfileTests(unittest.TestCase):
         self.assertEqual(7, len(qa))
         self.assertTrue(all(qa.values()))
 
+    def test_role_state_composition_is_cartesian_product_of_canonical_axes(self):
+        profile = self._read("fixtures/valid/visual-frontier-profile.json")
+        composition = profile["role_state_composition"]
+        self.assertEqual(profile["persona_roles"]["roles"], self._read("schemas/actor-persona.schema.json")["properties"]["role"]["enum"])
+        self.assertEqual(profile["motion_runtime"]["states"], self._read("schemas/presence-projection.schema.json")["properties"]["displayed_state"]["enum"])
+        self.assertEqual(len(profile["persona_roles"]["roles"]), composition["role_count"])
+        self.assertEqual(len(profile["motion_runtime"]["states"]), composition["state_count"])
+        self.assertEqual(
+            composition["role_count"] * composition["state_count"],
+            composition["combination_count"],
+        )
+        self.assertEqual(72, composition["combination_count"])
+
+    def test_role_and_state_visual_channels_are_orthogonal(self):
+        composition = self._read("fixtures/valid/visual-frontier-profile.json")["role_state_composition"]
+        self.assertEqual(["badge_accent"], composition["role_channel"])
+        self.assertEqual(
+            ["pose", "eyes", "custody_node", "halo_nodes", "rim_signal"],
+            composition["state_channel"],
+        )
+        self.assertEqual(
+            ["core_silhouette", "visor", "halo_geometry", "custody_ring_geometry"],
+            composition["identity_channel"],
+        )
+        self.assertTrue(set(composition["role_channel"]).isdisjoint(composition["state_channel"]))
+        self.assertTrue(set(composition["identity_channel"]).isdisjoint(composition["role_channel"]))
+        self.assertTrue(set(composition["identity_channel"]).isdisjoint(composition["state_channel"]))
+
+    def test_role_state_composition_is_exactly_pinned_and_projection_only(self):
+        profile = self._read("fixtures/valid/visual-frontier-profile.json")
+        composition = profile["role_state_composition"]
+        self.assertEqual("steward.role-state-composition/1.0", composition["schema_version"])
+        self.assertEqual("/assets/motion/role-state-composition-v1.json", composition["manifest_path"])
+        self.assertEqual(
+            "629fa301a67ddb30fd047d73f0892cd3dc08f76616b49659f701fcaeb941cc2b",
+            composition["manifest_sha256"],
+        )
+        self.assertEqual(
+            "4f01ab0b298b83d6a9033e68c758d0a5e24bece2",
+            composition["source_commit"],
+        )
+        self.assertEqual("state-semantic-priority", composition["fallback"])
+        self.assertFalse(composition["canonical_truth"])
+        self.assertFalse(composition["authority_effect"])
+        self.assertFalse(composition["verification_effect"])
+
+    def test_role_state_composition_qa_covers_all_72_combinations(self):
+        qa = self._read("fixtures/valid/visual-frontier-profile.json")["role_state_composition"]["qa"]
+        self.assertEqual(72, qa["combinations_checked"])
+        self.assertTrue(qa["all_combinations_pass"])
+        self.assertTrue(qa["no_role_fallback_pass"])
+        self.assertTrue(qa["console_errors_zero"])
+        self.assertTrue(qa["network_errors_zero"])
+
 
 if __name__ == "__main__":
     unittest.main()
