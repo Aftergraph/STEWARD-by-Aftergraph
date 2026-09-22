@@ -271,6 +271,79 @@ class VisualFrontierProfileTests(unittest.TestCase):
         self.assertTrue(qa["console_errors_zero"])
         self.assertTrue(qa["network_errors_zero"])
 
+    def test_persona_accessory_runtime_matches_canonical_roles_and_brand_contract(self):
+        profile = self._read("fixtures/valid/visual-frontier-profile.json")
+        accessory = profile["persona_accessory_runtime"]
+        canonical_roles = self._read("schemas/actor-persona.schema.json")["properties"]["role"]["enum"]
+        self.assertEqual("Aftergraph/brand", accessory["contract_owner"])
+        self.assertEqual("steward.persona-role-visual/1.0", accessory["role_contract"])
+        self.assertEqual(canonical_roles, accessory["roles"])
+        self.assertEqual(profile["persona_roles"]["roles"], accessory["roles"])
+        self.assertEqual(
+            {
+                "reviewer": "review-check",
+                "subscriber": "attention-signal",
+                "maintainer": "maintenance-tool",
+                "observer": "read-only-lens",
+                "auditor": "evidence-lens",
+                "integrator": "contract-bridge",
+            },
+            accessory["accessories"],
+        )
+        self.assertEqual(6, len(set(accessory["accessories"].values())))
+
+    def test_persona_accessory_runtime_is_exactly_pinned(self):
+        accessory = self._read("fixtures/valid/visual-frontier-profile.json")["persona_accessory_runtime"]
+        self.assertEqual("steward.persona-role-accessory-runtime/1.0", accessory["schema_version"])
+        self.assertEqual("/assets/motion/persona-role-accessories-v1.json", accessory["manifest_path"])
+        self.assertEqual(
+            "37c62a36e7b8fba3e609a102a5a8fc68c5a8cec6a57bcdc9329aa46cde38d10e",
+            accessory["manifest_sha256"],
+        )
+        self.assertEqual("02d7095b657c6ffaf98f0d204f2cdcb67d811bed", accessory["source_commit"])
+        self.assertEqual(5, accessory["source_revision"])
+        self.assertEqual("STEWARD_Rig", accessory["rig"])
+        self.assertEqual("badge", accessory["anchor"])
+
+    def test_persona_accessory_channels_preserve_role_state_identity_orthogonality(self):
+        profile = self._read("fixtures/valid/visual-frontier-profile.json")
+        accessory = profile["persona_accessory_runtime"]
+        self.assertEqual(["badge_accent", "functional_accessory"], accessory["role_channel"])
+        self.assertEqual(
+            ["pose", "eyes", "custody_node", "halo_nodes", "rim_signal"],
+            accessory["state_channel"],
+        )
+        self.assertEqual(
+            ["core_silhouette", "visor", "halo_geometry", "custody_ring_geometry"],
+            accessory["identity_channel"],
+        )
+        self.assertTrue(set(accessory["role_channel"]).isdisjoint(accessory["state_channel"]))
+        self.assertTrue(set(accessory["identity_channel"]).isdisjoint(accessory["role_channel"]))
+        self.assertTrue(set(accessory["identity_channel"]).isdisjoint(accessory["state_channel"]))
+        self.assertEqual("state-semantic-priority", accessory["fallback"])
+
+    def test_persona_accessory_runtime_is_projection_only_and_qa_complete(self):
+        profile = self._read("fixtures/valid/visual-frontier-profile.json")
+        accessory = profile["persona_accessory_runtime"]
+        self.assertFalse(accessory["canonical_truth"])
+        self.assertFalse(accessory["authority_effect"])
+        self.assertFalse(accessory["verification_effect"])
+        self.assertFalse(profile["presentation_boundary"]["canonical_truth"])
+        self.assertFalse(profile["presentation_boundary"]["authority_effect"])
+        self.assertFalse(profile["presentation_boundary"]["verification_effect"])
+        self.assertEqual(
+            {
+                "roles_checked": 6,
+                "unique_role_render_hashes": 6,
+                "critical_state_priority_cases": 4,
+                "reduced_motion": True,
+                "forced_glb_fallback": True,
+                "console_errors_zero": True,
+                "network_errors_zero": True,
+            },
+            accessory["qa"],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
