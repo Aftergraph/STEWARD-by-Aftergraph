@@ -1,4 +1,4 @@
-# STEWARD Visual Frontier Profile v1.6
+# STEWARD Visual Frontier Profile v1.7
 
 ## Purpose
 
@@ -148,39 +148,54 @@ Motion remains a projection. A motion, pose, color or halo pulse cannot create a
 
 ## Role × state composition
 
-STEWARD now composes actor role and system state as two orthogonal visual axes on the same revision-5 entity.
+STEWARD composes actor role and system state as two orthogonal visual axes on the same revision-5 entity, now with a single-boot runtime that does not reload the GLB when either axis changes.
 
 Contract:
 
-- schema: `steward.role-state-composition/1.0`
-- website source commit: `4f01ab0b298b83d6a9033e68c758d0a5e24bece2`
-- manifest: `/assets/motion/role-state-composition-v1.json`
-- manifest SHA-256: `629fa301a67ddb30fd047d73f0892cd3dc08f76616b49659f701fcaeb941cc2b`
+- composition schema/runtime: `steward.role-state-composition/1.0`
+- role accessory runtime: `steward.persona-role-accessory-runtime/1.0`
+- website source commit: `e91a8a73d3f29f46c30ee165140ac9c81b4dd32a`
+- manifest: `/assets/motion/persona-role-accessories-v1.json`
+- manifest SHA-256: `6d726e68640d7b05603586598771100f79f655af51bfd3af0d3dbc4e542d77b6`
 - role source: `persona_roles.roles`
 - state source: `motion_runtime.states`
 - combinations: `6 × 12 = 72`
+- runtime strategy: `single-boot-live-composition`
 
 Channel separation:
 
-- role channel: `badge_accent`
+- role channels: `badge_accent · functional_accessory`
 - state channels: `pose · eyes · custody_node · halo_nodes · rim_signal`
 - identity channels: `core_silhouette · visor · halo_geometry · custody_ring_geometry`
 
-Role styling never overwrites the state signal, and state animation never changes the role badge identity. Neither axis changes the canonical STEWARD silhouette.
+Canonical role accessories are rig-anchored to the existing `badge` bone:
 
-If WebGL fails, fallback uses **state-semantic priority**: the static state asset preserves the decision-relevant state while role accent may be omitted rather than fabricating a combined fallback.
+| Role | Functional accessory |
+| --- | --- |
+| reviewer | review-check |
+| subscriber | attention-signal |
+| maintainer | maintenance-tool |
+| observer | read-only-lens |
+| auditor | evidence-lens |
+| integrator | contract-bridge |
 
-Falsification for website source `4f01ab0b298b83d6a9033e68c758d0a5e24bece2`:
+Role changes replace only the role accessory/badge channel. State changes continue through the existing mixer and procedural state grammar. Neither change reloads or mutates the canonical rig topology.
 
-- all 72 role × state combinations loaded: PASS
+If WebGL fails, fallback uses **state-semantic priority**: the static state asset preserves the decision-relevant state while the role accessory may be omitted rather than fabricating a combined fallback.
+
+Falsification for website source `e91a8a73d3f29f46c30ee165140ac9c81b4dd32a`:
+
+- all 72 role × state combinations: PASS
 - typed URL role/state parity: PASS 72/72
-- WebGL role contract id parity: PASS 72/72
-- role badge accent token parity: PASS 72/72
+- role badge accent + functional accessory parity: PASS 72/72
 - state id/motion/accent parity: PASS 72/72
-- verified GLB clips remain `idle, blink, verify`: PASS
-- no-role fallback retains existing state behavior: PASS
-- console/page errors: 0
-- network errors: 0
+- exactly one GLB load per role session: PASS
+- runtime reuse across live role/state changes: PASS
+- unique idle role render hashes: 6/6
+- critical reduced-motion cases: 4/4 pixel-stable
+- forced GLB failure → state-semantic fallback: PASS
+- normal page/console errors: 0
+- normal network errors: 0
 - TypeScript: PASS
 - Vite client + SSR builds: PASS
 
@@ -190,7 +205,7 @@ Hard boundary:
 - `authority_effect = false`
 - `verification_effect = false`
 
-A reviewer+approving visual is not an approval. A maintainer+succeeded visual is not a merge or verification verdict. The composition remains a projection of independently owned truth.
+A reviewer+approving visual is not an approval. A maintainer+succeeded visual is not a merge or verification verdict. Functional accessories are role projections only and never grant capability or authority.
 
 ## Actor persona visual grammar
 
@@ -339,7 +354,7 @@ Before push of source commit `a25fa626979b3f938e9cec232cbaef52771e9db3`:
 - desktop WebGL: PASS
 - mobile + reduced motion: PASS
 - forced GLB failure → rev5 idle fallback: PASS
-- normal browser console/page errors: 0\n- compact presence asset SHA integrity: PASS\n- compact presence desktop/mobile browser QA: PASS\n- 12-state motion grammar browser QA: PASS\n- reduced-motion pixel stability: PASS\n- normal-motion pixel change: PASS\n- auto-sequence advancement: PASS\n- governed presence inspector 12/12 control sync: PASS\n- actor persona visual parity 6/6: PASS\n- role × state composition matrix 72/72: PASS
+- normal browser console/page errors: 0\n- compact presence asset SHA integrity: PASS\n- compact presence desktop/mobile browser QA: PASS\n- 12-state motion grammar browser QA: PASS\n- reduced-motion pixel stability: PASS\n- normal-motion pixel change: PASS\n- auto-sequence advancement: PASS\n- governed presence inspector 12/12 control sync: PASS\n- actor persona visual parity 6/6: PASS\n- role × state composition matrix 72/72: PASS\n- role/state runtime reuse (single GLB boot): PASS\n- persona accessory render uniqueness 6/6: PASS
 
 ## Current delivery observation
 
