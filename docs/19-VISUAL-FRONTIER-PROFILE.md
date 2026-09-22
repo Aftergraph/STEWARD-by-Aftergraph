@@ -1,4 +1,4 @@
-# STEWARD Visual Frontier Profile v1.9
+# STEWARD Visual Frontier Profile v1.10
 
 ## Purpose
 
@@ -330,6 +330,45 @@ Correctness after lazy scheduling:
 - network errors: 0
 
 This evidence is a fixed local-preview measurement. It does not claim public-edge reachability and does not override the external Higgsfield 401 blocker.
+
+## Frontier accessibility evidence
+
+The governed STEWARD visual preview now carries explicit accessibility semantics without allowing accessibility metadata to become a source of authority or verification truth.
+
+Exact provenance:
+
+- implementation commit: `0d1ea274198f75d4d65b4911e263cd5612b0022d`
+- evidence publish commit: `41b9d2d4ad6689db6aeb831cfec0e4fe6548b815`
+- evidence path: `/assets/accessibility/frontier-accessibility-v1.json`
+- evidence SHA-256: `77531777a5603bde500058acd572daab04b7e88d0c998bb438d6be504710888a`
+
+Semantics:
+
+- auto motion mode: `aria-live=off`
+- explicit role/state preview: `aria-live=polite`
+- explicit preview announcements: `aria-atomic=true`
+- shared truth-boundary descriptor: `#visual-preview-boundary`
+- role controls described: `6/6`
+- state controls described: `12/12`
+- total described controls: `18/18`
+
+Browser falsification:
+
+- auto mode silent: PASS
+- explicit role announcement: PASS
+- explicit state announcement: PASS
+- reduced-motion explicit preview: PASS
+- keyboard role control: PASS
+- keyboard state control: PASS
+- `aria-pressed` sync: PASS
+- URL role/state sync: PASS
+- WebGL role/state sync: PASS
+- console/page errors: 0
+- network errors: 0
+- TypeScript: PASS
+- Vite client + SSR builds: PASS
+
+The screen-reader copy explicitly describes role/state as presentation-only projections. Accessibility semantics cannot grant authority, create execution truth, approve work, or create verification truth.
 
 ## Material and signal hierarchy
 
