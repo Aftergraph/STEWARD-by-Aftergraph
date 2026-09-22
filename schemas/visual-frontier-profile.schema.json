@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://aftergraph.org/schemas/steward-visual-frontier-profile-1.6.json",
-  "title": "STEWARD Visual Frontier Profile 1.6",
+  "$id": "https://aftergraph.org/schemas/steward-visual-frontier-profile-1.7.json",
+  "title": "STEWARD Visual Frontier Profile 1.7",
   "description": "Renderer/evidence profile for STEWARD presence. It is presentation-only and does not own brand identity, authority, execution truth, or verification truth.",
   "type": "object",
   "additionalProperties": false,
@@ -18,11 +18,12 @@
     "presence_inspector",
     "persona_roles",
     "role_state_composition",
+    "persona_accessory_runtime",
     "presentation_boundary"
   ],
   "properties": {
     "schema_version": {
-      "const": "steward.visual-frontier-profile/1.6"
+      "const": "steward.visual-frontier-profile/1.7"
     },
     "profile_id": {
       "type": "string",
@@ -914,6 +915,197 @@
               "const": true
             },
             "no_role_fallback_pass": {
+              "const": true
+            },
+            "console_errors_zero": {
+              "const": true
+            },
+            "network_errors_zero": {
+              "const": true
+            }
+          }
+        }
+      }
+    },
+    "persona_accessory_runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "contract_owner",
+        "role_contract",
+        "manifest_path",
+        "manifest_sha256",
+        "source_commit",
+        "source_revision",
+        "rig",
+        "anchor",
+        "roles",
+        "accessories",
+        "role_channel",
+        "state_channel",
+        "identity_channel",
+        "fallback",
+        "canonical_truth",
+        "authority_effect",
+        "verification_effect",
+        "qa"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "steward.persona-role-accessory-runtime/1.0"
+        },
+        "contract_owner": {
+          "const": "Aftergraph/brand"
+        },
+        "role_contract": {
+          "const": "steward.persona-role-visual/1.0"
+        },
+        "manifest_path": {
+          "const": "/assets/motion/persona-role-accessories-v1.json"
+        },
+        "manifest_sha256": {
+          "const": "37c62a36e7b8fba3e609a102a5a8fc68c5a8cec6a57bcdc9329aa46cde38d10e"
+        },
+        "source_commit": {
+          "const": "02d7095b657c6ffaf98f0d204f2cdcb67d811bed"
+        },
+        "source_revision": {
+          "const": 5
+        },
+        "rig": {
+          "const": "STEWARD_Rig"
+        },
+        "anchor": {
+          "const": "badge"
+        },
+        "roles": {
+          "type": "array",
+          "uniqueItems": true,
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {
+            "enum": [
+              "reviewer",
+              "subscriber",
+              "maintainer",
+              "observer",
+              "auditor",
+              "integrator"
+            ]
+          }
+        },
+        "accessories": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "reviewer",
+            "subscriber",
+            "maintainer",
+            "observer",
+            "auditor",
+            "integrator"
+          ],
+          "properties": {
+            "reviewer": {
+              "const": "review-check"
+            },
+            "subscriber": {
+              "const": "attention-signal"
+            },
+            "maintainer": {
+              "const": "maintenance-tool"
+            },
+            "observer": {
+              "const": "read-only-lens"
+            },
+            "auditor": {
+              "const": "evidence-lens"
+            },
+            "integrator": {
+              "const": "contract-bridge"
+            }
+          }
+        },
+        "role_channel": {
+          "type": "array",
+          "uniqueItems": true,
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "enum": [
+              "badge_accent",
+              "functional_accessory"
+            ]
+          },
+          "allOf": [
+            {
+              "contains": {
+                "const": "badge_accent"
+              }
+            },
+            {
+              "contains": {
+                "const": "functional_accessory"
+              }
+            }
+          ]
+        },
+        "state_channel": {
+          "const": [
+            "pose",
+            "eyes",
+            "custody_node",
+            "halo_nodes",
+            "rim_signal"
+          ]
+        },
+        "identity_channel": {
+          "const": [
+            "core_silhouette",
+            "visor",
+            "halo_geometry",
+            "custody_ring_geometry"
+          ]
+        },
+        "fallback": {
+          "const": "state-semantic-priority"
+        },
+        "canonical_truth": {
+          "const": false
+        },
+        "authority_effect": {
+          "const": false
+        },
+        "verification_effect": {
+          "const": false
+        },
+        "qa": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "roles_checked",
+            "unique_role_render_hashes",
+            "critical_state_priority_cases",
+            "reduced_motion",
+            "forced_glb_fallback",
+            "console_errors_zero",
+            "network_errors_zero"
+          ],
+          "properties": {
+            "roles_checked": {
+              "const": 6
+            },
+            "unique_role_render_hashes": {
+              "const": 6
+            },
+            "critical_state_priority_cases": {
+              "const": 4
+            },
+            "reduced_motion": {
+              "const": true
+            },
+            "forced_glb_fallback": {
               "const": true
             },
             "console_errors_zero": {
