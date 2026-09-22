@@ -1,6 +1,6 @@
 {
-  "schema_version": "steward.visual-frontier-profile/1.8",
-  "profile_id": "steward-frontier-rev5-role-state-observed-v1-2026-09-22",
+  "schema_version": "steward.visual-frontier-profile/1.9",
+  "profile_id": "steward-frontier-rev5-performance-v1-2026-09-22",
   "identity_owner": "Aftergraph/brand",
   "renderer_owner": "Aftergraph/STEWARD-by-Aftergraph",
   "source_scene": {
@@ -264,5 +264,46 @@
     "evidence_path": "/assets/motion/persona-role-accessories-v1.evidence.json",
     "evidence_sha256": "b0d4bb0f540ddd137938418ee6d50b7fb75177c06ab4e446e76bdd56bb948c0a",
     "evidence_publish_commit": "5754d67f2144f734f2ebe94fbf909280fd913a17"
+  },
+  "performance_evidence": {
+    "schema_version": "steward.frontier-performance-evidence/1.0",
+    "evidence_path": "/assets/performance/frontier-performance-v1.json",
+    "evidence_sha256": "eba2656ffc7888124ed99b9913b06a0f48ed10ff0089feaac9652c850e49a5b4",
+    "baseline_source_commit": "5754d67f2144f734f2ebe94fbf909280fd913a17",
+    "implementation_commit": "443a54adae8397dedb846a926e70f5550fc5fe4c",
+    "evidence_publish_commit": "676f5a4371179daaa25c4005e7f92f99e9fa5fe2",
+    "baseline": {
+      "resource_count": 47,
+      "resource_bytes": 7931646,
+      "below_fold_loaded_images": 40,
+      "lazy_images": 0,
+      "webgl_ready_ms": 812
+    },
+    "after": {
+      "resource_count": 16,
+      "resource_bytes": 3303805,
+      "below_fold_loaded_images_initial": 6,
+      "lazy_images": 39,
+      "webgl_ready_ms": 830
+    },
+    "delta": {
+      "resource_bytes_reduction": 4627841,
+      "resource_bytes_reduction_percent": 58.35,
+      "resource_count_reduction": 31,
+      "below_fold_immediate_load_reduction": 34,
+      "webgl_ready_delta_ms": 18
+    },
+    "correctness": {
+      "all_images_loaded_after_scroll": true,
+      "loaded_after_scroll": 41,
+      "failed_images_after_scroll": 0,
+      "keyboard_role_control": true,
+      "keyboard_state_control": true,
+      "aria_pressed_sync": true,
+      "url_role_state_sync": true,
+      "webgl_role_state_sync": true,
+      "console_errors_zero": true,
+      "network_errors_zero": true
+    }
   }
 }
