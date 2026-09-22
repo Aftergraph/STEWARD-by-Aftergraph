@@ -1,0 +1,59 @@
+{
+  "schema": "steward.p2.live-tg-aie-git-sentinel/0.2",
+  "snapshot_date": "2026-09-22",
+  "source": {
+    "repository": "Aftergraph/trust-gateway",
+    "workflow_run_id": 35705143951,
+    "workflow_job_id": 106672155875,
+    "workflow_trigger_sha": "0c54a930a4dad935183e5f2fdbd7265cccdf089f"
+  },
+  "owners": {
+    "trust_gateway_sha": "ba5027241555393c81f71cdf63ded50093bc87d2",
+    "aie_sha": "4c8b871478183557d147a6670a57c5b5e7b15024",
+    "sentinel_sha": "eb51f824af2279ee3eee5daa8572bd54a34b3ca8"
+  },
+  "correlation": {
+    "mission_id": "mission/steward-p2-live-tg",
+    "action_id": "act_dddddddddddddddddddddddddddddddd",
+    "authority_lease_id": "auth_eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+  },
+  "effect": {
+    "repository": "Aftergraph/trust-gateway",
+    "branch": "p2/governed-egress-live-proof",
+    "pull_request": 129,
+    "before_sha": "7eac0b6c20edd19fdc6a1864831a548ac97a0d13",
+    "after_sha": "f07311cc3b3c15edae13c1ff4394231f33fd23f9",
+    "remote_branch_readback_sha": "f07311cc3b3c15edae13c1ff4394231f33fd23f9",
+    "remote_pr_head_sha": "f07311cc3b3c15edae13c1ff4394231f33fd23f9",
+    "egress_request_digest": "6e8f667d12a45e3ce5b34f30d0bcd7d09056a48500f61f1942b98c56351e364c"
+  },
+  "checks": {
+    "aie_action_time_revalidation": "PASS",
+    "governed_remote_git_mutation": "PASS",
+    "credential_surrogation": "PASS",
+    "remote_exact_sha_readback": "PASS",
+    "sentinel_exact_sha_before": "PASS",
+    "sentinel_exact_sha_after": "PASS",
+    "stale_prior_subject_invalidation": "PASS",
+    "aie_revocation_fail_closed": "PASS"
+  },
+  "measurements": {
+    "aie_revalidation_evidence_count": 3,
+    "remote_readback_attempt": 2,
+    "transport_calls_after_revocation": 1
+  },
+  "scope": {
+    "production_deployment": "absent",
+    "runtime_in_chain": false,
+    "works_in_chain": false,
+    "full_golden_mission": false
+  },
+  "remaining_requirements": [
+    "runtime_service_binding",
+    "works_service_binding",
+    "single_mission_and_causal_ids_across_runtime_works_trust_gateway_aie_git_sentinel",
+    "runtime_subject_binding_to_observed_effect",
+    "single_causal_evidence_bundle"
+  ],
+  "content_sha256": "b0803b6f5bc6a8f57cb44d604892147e2b9187cabbc019d7a7791cbbe1b6ed27"
+}
