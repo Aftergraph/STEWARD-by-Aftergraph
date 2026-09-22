@@ -335,6 +335,43 @@ class VisualFrontierProfileTests(unittest.TestCase):
         self.assertTrue(correctness["webgl_role_state_sync"])
         self.assertTrue(correctness["console_errors_zero"])
         self.assertTrue(correctness["network_errors_zero"])
+    def test_frontier_accessibility_evidence_is_exactly_pinned(self):
+        profile = self._read("fixtures/valid/visual-frontier-profile.json")
+        evidence = profile["accessibility_evidence"]
+        self.assertEqual("steward.frontier-accessibility-evidence/1.0", evidence["schema_version"])
+        self.assertEqual("/assets/accessibility/frontier-accessibility-v1.json", evidence["evidence_path"])
+        self.assertEqual(
+            "77531777a5603bde500058acd572daab04b7e88d0c998bb438d6be504710888a",
+            evidence["evidence_sha256"],
+        )
+        self.assertEqual("0d1ea274198f75d4d65b4911e263cd5612b0022d", evidence["implementation_commit"])
+        self.assertEqual("41b9d2d4ad6689db6aeb831cfec0e4fe6548b815", evidence["evidence_publish_commit"])
+
+    def test_frontier_accessibility_live_region_is_truth_safe(self):
+        evidence = self._read("fixtures/valid/visual-frontier-profile.json")["accessibility_evidence"]
+        semantics = evidence["semantics"]
+        self.assertEqual("off", semantics["auto_mode_live_region"])
+        self.assertEqual("polite", semantics["explicit_preview_live_region"])
+        self.assertTrue(semantics["aria_atomic"])
+        self.assertTrue(semantics["projection_only_copy"])
+        self.assertEqual(18, semantics["described_controls"])
+
+    def test_frontier_accessibility_qa_is_complete(self):
+        evidence = self._read("fixtures/valid/visual-frontier-profile.json")["accessibility_evidence"]
+        qa = evidence["qa"]
+        self.assertTrue(qa["auto_mode_silent"])
+        self.assertTrue(qa["explicit_role_announced"])
+        self.assertTrue(qa["explicit_state_announced"])
+        self.assertTrue(qa["reduced_motion_explicit_preview"])
+        self.assertTrue(qa["keyboard_role_control"])
+        self.assertTrue(qa["keyboard_state_control"])
+        self.assertTrue(qa["aria_pressed_sync"])
+        self.assertTrue(qa["url_role_state_sync"])
+        self.assertTrue(qa["webgl_role_state_sync"])
+        self.assertEqual(6, qa["role_controls_described"])
+        self.assertEqual(12, qa["state_controls_described"])
+        self.assertTrue(qa["console_errors_zero"])
+        self.assertTrue(qa["network_errors_zero"])
 
 if __name__ == "__main__":
     unittest.main()

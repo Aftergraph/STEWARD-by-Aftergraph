@@ -1,6 +1,6 @@
 {
-  "schema_version": "steward.visual-frontier-profile/1.9",
-  "profile_id": "steward-frontier-rev5-performance-v1-2026-09-22",
+  "schema_version": "steward.visual-frontier-profile/1.10",
+  "profile_id": "steward-frontier-rev5-accessibility-v1-2026-09-22",
   "identity_owner": "Aftergraph/brand",
   "renderer_owner": "Aftergraph/STEWARD-by-Aftergraph",
   "source_scene": {
@@ -302,6 +302,41 @@
       "aria_pressed_sync": true,
       "url_role_state_sync": true,
       "webgl_role_state_sync": true,
+      "console_errors_zero": true,
+      "network_errors_zero": true
+    }
+  },
+  "accessibility_evidence": {
+    "schema_version": "steward.frontier-accessibility-evidence/1.0",
+    "evidence_path": "/assets/accessibility/frontier-accessibility-v1.json",
+    "evidence_sha256": "77531777a5603bde500058acd572daab04b7e88d0c998bb438d6be504710888a",
+    "implementation_commit": "0d1ea274198f75d4d65b4911e263cd5612b0022d",
+    "evidence_publish_commit": "41b9d2d4ad6689db6aeb831cfec0e4fe6548b815",
+    "semantics": {
+      "auto_mode_live_region": "off",
+      "explicit_preview_live_region": "polite",
+      "aria_atomic": true,
+      "truth_boundary_id": "visual-preview-boundary",
+      "role_controls": 6,
+      "state_controls": 12,
+      "described_controls": 18,
+      "projection_only_copy": true
+    },
+    "qa": {
+      "typecheck": true,
+      "vite_client": true,
+      "vite_ssr": true,
+      "auto_mode_silent": true,
+      "explicit_role_announced": true,
+      "explicit_state_announced": true,
+      "reduced_motion_explicit_preview": true,
+      "keyboard_role_control": true,
+      "keyboard_state_control": true,
+      "aria_pressed_sync": true,
+      "url_role_state_sync": true,
+      "webgl_role_state_sync": true,
+      "role_controls_described": 6,
+      "state_controls_described": 12,
       "console_errors_zero": true,
       "network_errors_zero": true
     }
