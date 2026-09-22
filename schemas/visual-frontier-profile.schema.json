@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://aftergraph.org/schemas/steward-visual-frontier-profile-1.8.json",
-  "title": "STEWARD Visual Frontier Profile 1.8",
+  "$id": "https://aftergraph.org/schemas/steward-visual-frontier-profile-1.9.json",
+  "title": "STEWARD Visual Frontier Profile 1.9",
   "description": "Renderer/evidence profile for STEWARD presence. It is presentation-only and does not own brand identity, authority, execution truth, or verification truth.",
   "type": "object",
   "additionalProperties": false,
@@ -18,11 +18,12 @@
     "presence_inspector",
     "persona_roles",
     "role_state_composition",
+    "performance_evidence",
     "presentation_boundary"
   ],
   "properties": {
     "schema_version": {
-      "const": "steward.visual-frontier-profile/1.8"
+      "const": "steward.visual-frontier-profile/1.9"
     },
     "profile_id": {
       "type": "string",
@@ -1012,6 +1013,174 @@
         },
         "evidence_publish_commit": {
           "const": "5754d67f2144f734f2ebe94fbf909280fd913a17"
+        }
+      }
+    },
+    "performance_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "evidence_path",
+        "evidence_sha256",
+        "baseline_source_commit",
+        "implementation_commit",
+        "evidence_publish_commit",
+        "baseline",
+        "after",
+        "delta",
+        "correctness"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "steward.frontier-performance-evidence/1.0"
+        },
+        "evidence_path": {
+          "const": "/assets/performance/frontier-performance-v1.json"
+        },
+        "evidence_sha256": {
+          "const": "eba2656ffc7888124ed99b9913b06a0f48ed10ff0089feaac9652c850e49a5b4"
+        },
+        "baseline_source_commit": {
+          "const": "5754d67f2144f734f2ebe94fbf909280fd913a17"
+        },
+        "implementation_commit": {
+          "const": "443a54adae8397dedb846a926e70f5550fc5fe4c"
+        },
+        "evidence_publish_commit": {
+          "const": "676f5a4371179daaa25c4005e7f92f99e9fa5fe2"
+        },
+        "baseline": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "resource_count",
+            "resource_bytes",
+            "below_fold_loaded_images",
+            "lazy_images",
+            "webgl_ready_ms"
+          ],
+          "properties": {
+            "resource_count": {
+              "const": 47
+            },
+            "resource_bytes": {
+              "const": 7931646
+            },
+            "below_fold_loaded_images": {
+              "const": 40
+            },
+            "lazy_images": {
+              "const": 0
+            },
+            "webgl_ready_ms": {
+              "const": 812
+            }
+          }
+        },
+        "after": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "resource_count",
+            "resource_bytes",
+            "below_fold_loaded_images_initial",
+            "lazy_images",
+            "webgl_ready_ms"
+          ],
+          "properties": {
+            "resource_count": {
+              "const": 16
+            },
+            "resource_bytes": {
+              "const": 3303805
+            },
+            "below_fold_loaded_images_initial": {
+              "const": 6
+            },
+            "lazy_images": {
+              "const": 39
+            },
+            "webgl_ready_ms": {
+              "const": 830
+            }
+          }
+        },
+        "delta": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "resource_bytes_reduction",
+            "resource_bytes_reduction_percent",
+            "resource_count_reduction",
+            "below_fold_immediate_load_reduction",
+            "webgl_ready_delta_ms"
+          ],
+          "properties": {
+            "resource_bytes_reduction": {
+              "const": 4627841
+            },
+            "resource_bytes_reduction_percent": {
+              "const": 58.35
+            },
+            "resource_count_reduction": {
+              "const": 31
+            },
+            "below_fold_immediate_load_reduction": {
+              "const": 34
+            },
+            "webgl_ready_delta_ms": {
+              "const": 18
+            }
+          }
+        },
+        "correctness": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "all_images_loaded_after_scroll",
+            "loaded_after_scroll",
+            "failed_images_after_scroll",
+            "keyboard_role_control",
+            "keyboard_state_control",
+            "aria_pressed_sync",
+            "url_role_state_sync",
+            "webgl_role_state_sync",
+            "console_errors_zero",
+            "network_errors_zero"
+          ],
+          "properties": {
+            "all_images_loaded_after_scroll": {
+              "const": true
+            },
+            "loaded_after_scroll": {
+              "const": 41
+            },
+            "failed_images_after_scroll": {
+              "const": 0
+            },
+            "keyboard_role_control": {
+              "const": true
+            },
+            "keyboard_state_control": {
+              "const": true
+            },
+            "aria_pressed_sync": {
+              "const": true
+            },
+            "url_role_state_sync": {
+              "const": true
+            },
+            "webgl_role_state_sync": {
+              "const": true
+            },
+            "console_errors_zero": {
+              "const": true
+            },
+            "network_errors_zero": {
+              "const": true
+            }
+          }
         }
       }
     }

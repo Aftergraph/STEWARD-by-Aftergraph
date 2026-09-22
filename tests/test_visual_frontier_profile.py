@@ -301,6 +301,40 @@ class VisualFrontierProfileTests(unittest.TestCase):
         self.assertTrue(qa["console_errors_zero"])
         self.assertTrue(qa["network_errors_zero"])
 
+    def test_frontier_performance_evidence_is_exactly_pinned(self):
+        profile = self._read("fixtures/valid/visual-frontier-profile.json")
+        perf = profile["performance_evidence"]
+        self.assertEqual("steward.frontier-performance-evidence/1.0", perf["schema_version"])
+        self.assertEqual("/assets/performance/frontier-performance-v1.json", perf["evidence_path"])
+        self.assertEqual(
+            "eba2656ffc7888124ed99b9913b06a0f48ed10ff0089feaac9652c850e49a5b4",
+            perf["evidence_sha256"],
+        )
+        self.assertEqual("5754d67f2144f734f2ebe94fbf909280fd913a17", perf["baseline_source_commit"])
+        self.assertEqual("443a54adae8397dedb846a926e70f5550fc5fe4c", perf["implementation_commit"])
+        self.assertEqual("676f5a4371179daaa25c4005e7f92f99e9fa5fe2", perf["evidence_publish_commit"])
+
+    def test_frontier_performance_improves_initial_load_without_webgl_regression(self):
+        perf = self._read("fixtures/valid/visual-frontier-profile.json")["performance_evidence"]
+        self.assertLess(perf["after"]["resource_bytes"], perf["baseline"]["resource_bytes"])
+        self.assertLess(perf["after"]["resource_count"], perf["baseline"]["resource_count"])
+        self.assertLess(perf["after"]["below_fold_loaded_images_initial"], perf["baseline"]["below_fold_loaded_images"])
+        self.assertGreaterEqual(perf["after"]["lazy_images"], 39)
+        self.assertLessEqual(perf["delta"]["webgl_ready_delta_ms"], 25)
+        self.assertGreaterEqual(perf["delta"]["resource_bytes_reduction_percent"], 50)
+
+    def test_frontier_performance_correctness_is_complete(self):
+        correctness = self._read("fixtures/valid/visual-frontier-profile.json")["performance_evidence"]["correctness"]
+        self.assertTrue(correctness["all_images_loaded_after_scroll"])
+        self.assertEqual(41, correctness["loaded_after_scroll"])
+        self.assertEqual(0, correctness["failed_images_after_scroll"])
+        self.assertTrue(correctness["keyboard_role_control"])
+        self.assertTrue(correctness["keyboard_state_control"])
+        self.assertTrue(correctness["aria_pressed_sync"])
+        self.assertTrue(correctness["url_role_state_sync"])
+        self.assertTrue(correctness["webgl_role_state_sync"])
+        self.assertTrue(correctness["console_errors_zero"])
+        self.assertTrue(correctness["network_errors_zero"])
 
 if __name__ == "__main__":
     unittest.main()
