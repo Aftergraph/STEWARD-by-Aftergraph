@@ -1,0 +1,43 @@
+{
+  "causal_gate": {
+    "terminal_status_requires_probe_success": true,
+    "vet_needs": [
+      "p2-live-production-readback"
+    ]
+  },
+  "content_sha256": "3e65f1151927e3a42d62c29f117fc5f5a3b0652d2812d8b981c7551dde68ae44",
+  "readback": {
+    "endpoint": "http://127.0.0.1:18191/healthz",
+    "expected_body": {
+      "status": "ok"
+    },
+    "result": "PASS"
+  },
+  "schema": "steward.p2.works-live-readback/1.0",
+  "scope": {
+    "does_not_prove": [
+      "WORKS deployed commit SHA",
+      "Runtime dispatch acceptance",
+      "Runtime subject binding",
+      "full Golden Mission"
+    ],
+    "production_effect": false,
+    "proves": "WORKS production API is reachable and healthy from canonical avc-core execution"
+  },
+  "snapshot_date": "2026-09-22",
+  "source": {
+    "commit_status_context": "works-execution",
+    "commit_status_created_at": "2026-09-22T08:36:28Z",
+    "commit_status_id": 54649012482,
+    "commit_status_state": "success",
+    "head_sha": "16ad638753797da5c360d61d8b2202297c96bfef",
+    "repository": "Aftergraph/works-execution",
+    "works_yml_blob_sha": "01a9122985eb775bd5ae2f65e7b3fcc82bd37729"
+  },
+  "work": {
+    "pipeline": "verify",
+    "pool": "avc-core",
+    "probe_node": "p2-live-production-readback",
+    "work_id": "wrk_8cb22d16ab2d1b66fdbc0637991ba358"
+  }
+}
