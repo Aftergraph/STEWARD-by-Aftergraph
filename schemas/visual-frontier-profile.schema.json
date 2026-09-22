@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://aftergraph.org/schemas/steward-visual-frontier-profile-1.9.json",
-  "title": "STEWARD Visual Frontier Profile 1.9",
+  "$id": "https://aftergraph.org/schemas/steward-visual-frontier-profile-1.10.json",
+  "title": "STEWARD Visual Frontier Profile 1.10",
   "description": "Renderer/evidence profile for STEWARD presence. It is presentation-only and does not own brand identity, authority, execution truth, or verification truth.",
   "type": "object",
   "additionalProperties": false,
@@ -19,11 +19,12 @@
     "persona_roles",
     "role_state_composition",
     "performance_evidence",
+    "accessibility_evidence",
     "presentation_boundary"
   ],
   "properties": {
     "schema_version": {
-      "const": "steward.visual-frontier-profile/1.9"
+      "const": "steward.visual-frontier-profile/1.10"
     },
     "profile_id": {
       "type": "string",
@@ -1173,6 +1174,148 @@
             },
             "webgl_role_state_sync": {
               "const": true
+            },
+            "console_errors_zero": {
+              "const": true
+            },
+            "network_errors_zero": {
+              "const": true
+            }
+          }
+        }
+      }
+    },
+    "accessibility_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "evidence_path",
+        "evidence_sha256",
+        "implementation_commit",
+        "evidence_publish_commit",
+        "semantics",
+        "qa"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "steward.frontier-accessibility-evidence/1.0"
+        },
+        "evidence_path": {
+          "const": "/assets/accessibility/frontier-accessibility-v1.json"
+        },
+        "evidence_sha256": {
+          "const": "77531777a5603bde500058acd572daab04b7e88d0c998bb438d6be504710888a"
+        },
+        "implementation_commit": {
+          "const": "0d1ea274198f75d4d65b4911e263cd5612b0022d"
+        },
+        "evidence_publish_commit": {
+          "const": "41b9d2d4ad6689db6aeb831cfec0e4fe6548b815"
+        },
+        "semantics": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "auto_mode_live_region",
+            "explicit_preview_live_region",
+            "aria_atomic",
+            "truth_boundary_id",
+            "role_controls",
+            "state_controls",
+            "described_controls",
+            "projection_only_copy"
+          ],
+          "properties": {
+            "auto_mode_live_region": {
+              "const": "off"
+            },
+            "explicit_preview_live_region": {
+              "const": "polite"
+            },
+            "aria_atomic": {
+              "const": true
+            },
+            "truth_boundary_id": {
+              "const": "visual-preview-boundary"
+            },
+            "role_controls": {
+              "const": 6
+            },
+            "state_controls": {
+              "const": 12
+            },
+            "described_controls": {
+              "const": 18
+            },
+            "projection_only_copy": {
+              "const": true
+            }
+          }
+        },
+        "qa": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "typecheck",
+            "vite_client",
+            "vite_ssr",
+            "auto_mode_silent",
+            "explicit_role_announced",
+            "explicit_state_announced",
+            "reduced_motion_explicit_preview",
+            "keyboard_role_control",
+            "keyboard_state_control",
+            "aria_pressed_sync",
+            "url_role_state_sync",
+            "webgl_role_state_sync",
+            "role_controls_described",
+            "state_controls_described",
+            "console_errors_zero",
+            "network_errors_zero"
+          ],
+          "properties": {
+            "typecheck": {
+              "const": true
+            },
+            "vite_client": {
+              "const": true
+            },
+            "vite_ssr": {
+              "const": true
+            },
+            "auto_mode_silent": {
+              "const": true
+            },
+            "explicit_role_announced": {
+              "const": true
+            },
+            "explicit_state_announced": {
+              "const": true
+            },
+            "reduced_motion_explicit_preview": {
+              "const": true
+            },
+            "keyboard_role_control": {
+              "const": true
+            },
+            "keyboard_state_control": {
+              "const": true
+            },
+            "aria_pressed_sync": {
+              "const": true
+            },
+            "url_role_state_sync": {
+              "const": true
+            },
+            "webgl_role_state_sync": {
+              "const": true
+            },
+            "role_controls_described": {
+              "const": 6
+            },
+            "state_controls_described": {
+              "const": 12
             },
             "console_errors_zero": {
               "const": true
