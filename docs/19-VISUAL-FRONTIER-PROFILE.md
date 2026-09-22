@@ -1,4 +1,4 @@
-# STEWARD Visual Frontier Profile v1.5
+# STEWARD Visual Frontier Profile v1.6
 
 ## Purpose
 
@@ -145,6 +145,52 @@ Falsification evidence before source commit `4c71ce1322281056c70dd896abefc03936f
 - console/page/network errors across 12 fixed-state cases: 0
 
 Motion remains a projection. A motion, pose, color or halo pulse cannot create authority, approval, execution truth or verification truth.
+
+## Role × state composition
+
+STEWARD now composes actor role and system state as two orthogonal visual axes on the same revision-5 entity.
+
+Contract:
+
+- schema: `steward.role-state-composition/1.0`
+- website source commit: `4f01ab0b298b83d6a9033e68c758d0a5e24bece2`
+- manifest: `/assets/motion/role-state-composition-v1.json`
+- manifest SHA-256: `629fa301a67ddb30fd047d73f0892cd3dc08f76616b49659f701fcaeb941cc2b`
+- role source: `persona_roles.roles`
+- state source: `motion_runtime.states`
+- combinations: `6 × 12 = 72`
+
+Channel separation:
+
+- role channel: `badge_accent`
+- state channels: `pose · eyes · custody_node · halo_nodes · rim_signal`
+- identity channels: `core_silhouette · visor · halo_geometry · custody_ring_geometry`
+
+Role styling never overwrites the state signal, and state animation never changes the role badge identity. Neither axis changes the canonical STEWARD silhouette.
+
+If WebGL fails, fallback uses **state-semantic priority**: the static state asset preserves the decision-relevant state while role accent may be omitted rather than fabricating a combined fallback.
+
+Falsification for website source `4f01ab0b298b83d6a9033e68c758d0a5e24bece2`:
+
+- all 72 role × state combinations loaded: PASS
+- typed URL role/state parity: PASS 72/72
+- WebGL role contract id parity: PASS 72/72
+- role badge accent token parity: PASS 72/72
+- state id/motion/accent parity: PASS 72/72
+- verified GLB clips remain `idle, blink, verify`: PASS
+- no-role fallback retains existing state behavior: PASS
+- console/page errors: 0
+- network errors: 0
+- TypeScript: PASS
+- Vite client + SSR builds: PASS
+
+Hard boundary:
+
+- `canonical_truth = false`
+- `authority_effect = false`
+- `verification_effect = false`
+
+A reviewer+approving visual is not an approval. A maintainer+succeeded visual is not a merge or verification verdict. The composition remains a projection of independently owned truth.
 
 ## Actor persona visual grammar
 
@@ -293,7 +339,7 @@ Before push of source commit `a25fa626979b3f938e9cec232cbaef52771e9db3`:
 - desktop WebGL: PASS
 - mobile + reduced motion: PASS
 - forced GLB failure → rev5 idle fallback: PASS
-- normal browser console/page errors: 0\n- compact presence asset SHA integrity: PASS\n- compact presence desktop/mobile browser QA: PASS\n- 12-state motion grammar browser QA: PASS\n- reduced-motion pixel stability: PASS\n- normal-motion pixel change: PASS\n- auto-sequence advancement: PASS\n- governed presence inspector 12/12 control sync: PASS\n- actor persona visual parity 6/6: PASS
+- normal browser console/page errors: 0\n- compact presence asset SHA integrity: PASS\n- compact presence desktop/mobile browser QA: PASS\n- 12-state motion grammar browser QA: PASS\n- reduced-motion pixel stability: PASS\n- normal-motion pixel change: PASS\n- auto-sequence advancement: PASS\n- governed presence inspector 12/12 control sync: PASS\n- actor persona visual parity 6/6: PASS\n- role × state composition matrix 72/72: PASS
 
 ## Current delivery observation
 
