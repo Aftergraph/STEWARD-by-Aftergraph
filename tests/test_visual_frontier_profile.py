@@ -258,6 +258,18 @@ class VisualFrontierProfileTests(unittest.TestCase):
             "e91a8a73d3f29f46c30ee165140ac9c81b4dd32a",
             composition["source_commit"],
         )
+        self.assertEqual(
+            "/assets/motion/persona-role-accessories-v1.evidence.json",
+            composition["evidence_path"],
+        )
+        self.assertEqual(
+            "b0d4bb0f540ddd137938418ee6d50b7fb75177c06ab4e446e76bdd56bb948c0a",
+            composition["evidence_sha256"],
+        )
+        self.assertEqual(
+            "5754d67f2144f734f2ebe94fbf909280fd913a17",
+            composition["evidence_publish_commit"],
+        )
         self.assertEqual("steward.persona-role-accessory-runtime/1.0", composition["accessory_runtime_id"])
         self.assertEqual("single-boot-live-composition", composition["runtime_strategy"])
         self.assertEqual(
