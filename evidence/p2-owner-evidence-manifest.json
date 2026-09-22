@@ -1,0 +1,69 @@
+{
+  "schema": "steward.p2.owner-evidence-manifest/1.0",
+  "snapshot_date": "2026-09-22",
+  "verified_scope": "owner-native-ci",
+  "live_end_to_end": false,
+  "causal_chain": false,
+  "receipts": [
+    {
+      "owner": "Aftergraph/runtime",
+      "head_sha": "355ffd26e43f4e6a55f8f3f15d818fa606fb3f6c",
+      "run_id": 35703876235,
+      "job_id": 106668027010,
+      "artifact_id": 10684096818,
+      "artifact_digest": "sha256:8cbe27f5aaabd1137fbf6f87e158ddafcb8a5b88077d9b3045093c36f19604a2",
+      "receipt_content_sha256": "060d7a7a08c73acfec1027abb919b648bd1467de85ab0e519153e133518dd8f4",
+      "result": "PASS"
+    },
+    {
+      "owner": "Aftergraph/works-execution",
+      "head_sha": "fa9f8e5f70c600b3bc46af7b5bcfbcaf1a09e7cc",
+      "run_id": 35703881455,
+      "job_id": 106668041063,
+      "artifact_id": 10683552636,
+      "artifact_digest": "sha256:f9ed8cc744e988b3b875732502adfb157d123fd0f37f3b494163d079b4caf5ea",
+      "receipt_content_sha256": "115d1eed911adbcea578def903270c810cd4d7de63d24439d44ab819dca4abcc",
+      "result": "PASS"
+    },
+    {
+      "owner": "Aftergraph/trust-gateway",
+      "head_sha": "d00030a51a4f3557127a84b6c2286743bf24898b",
+      "run_id": 35703884108,
+      "job_id": 106668048942,
+      "artifact_id": 10683747169,
+      "artifact_digest": "sha256:365b3b89fb73d547eba4a18e8ede5249cc6dfa66d9c60fdfebb16f2d632415f1",
+      "receipt_content_sha256": "7f31861ad5fc6dd37b5409408326b4fea064bd9bb42f81f7b046f6a8b46e7c91",
+      "result": "PASS"
+    },
+    {
+      "owner": "Aftergraph/aie",
+      "head_sha": "881730a704ff02e0a88bc4f18d6a4e09a2f3ac8e",
+      "run_id": 35703888905,
+      "job_id": 106668064804,
+      "artifact_id": 10683851215,
+      "artifact_digest": "sha256:ad1ea925a2939a04639d107ab95dfd6ba2c70f8a02661402f83fec1e33dc1d39",
+      "receipt_content_sha256": "3f868be4a6d1419402d490268fc1724121e3079b0975350b9f6710b780005f9d",
+      "result": "PASS"
+    },
+    {
+      "owner": "Aftergraph/sentinel",
+      "head_sha": "c1871658acf4f96ed30d24a2b15ed2a85f807033",
+      "run_id": 35703893663,
+      "job_id": 106668078504,
+      "artifact_id": 10684090609,
+      "artifact_digest": "sha256:40278daa4dcebf6ea12fc4e4ce27bfd3bf9bec8c01947f0a4749ae792f89b97a",
+      "receipt_content_sha256": "a640010e24000786e62caefb82559ad88bc4efbb30e695185f2768d420fe7eae",
+      "result": "PASS"
+    }
+  ],
+  "remaining_live_requirements": [
+    "single_mission_id_across_runtime_works_trust_gateway_aie_habitat_sentinel",
+    "runtime_service_binding",
+    "works_service_binding",
+    "trust_gateway_aie_live_service_binding",
+    "habitat_git_live_effect_receipt",
+    "sentinel_live_verdict_on_exact_effect_subject",
+    "single_causal_evidence_bundle"
+  ],
+  "content_sha256": "fc420069596f9c985bffc39b6b91375bb0d84fe12d20471591a332417863d7f6"
+}
