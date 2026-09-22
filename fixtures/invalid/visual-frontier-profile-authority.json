@@ -1,6 +1,6 @@
 {
-  "schema_version": "steward.visual-frontier-profile/1.5",
-  "profile_id": "steward-frontier-rev5-persona-roles-v1-2026-09-22",
+  "schema_version": "steward.visual-frontier-profile/1.6",
+  "profile_id": "steward-frontier-rev5-role-state-composition-v1-2026-09-22",
   "identity_owner": "Aftergraph/brand",
   "renderer_owner": "Aftergraph/STEWARD-by-Aftergraph",
   "source_scene": {
@@ -204,6 +204,44 @@
       "desktop": true,
       "mobile": true,
       "legacy_role_assets_absent": true,
+      "console_errors_zero": true,
+      "network_errors_zero": true
+    }
+  },
+  "role_state_composition": {
+    "schema_version": "steward.role-state-composition/1.0",
+    "manifest_path": "/assets/motion/role-state-composition-v1.json",
+    "manifest_sha256": "629fa301a67ddb30fd047d73f0892cd3dc08f76616b49659f701fcaeb941cc2b",
+    "source_commit": "4f01ab0b298b83d6a9033e68c758d0a5e24bece2",
+    "role_source": "persona_roles.roles",
+    "state_source": "motion_runtime.states",
+    "role_count": 6,
+    "state_count": 12,
+    "combination_count": 72,
+    "role_channel": [
+      "badge_accent"
+    ],
+    "state_channel": [
+      "pose",
+      "eyes",
+      "custody_node",
+      "halo_nodes",
+      "rim_signal"
+    ],
+    "identity_channel": [
+      "core_silhouette",
+      "visor",
+      "halo_geometry",
+      "custody_ring_geometry"
+    ],
+    "fallback": "state-semantic-priority",
+    "canonical_truth": false,
+    "authority_effect": false,
+    "verification_effect": false,
+    "qa": {
+      "combinations_checked": 72,
+      "all_combinations_pass": true,
+      "no_role_fallback_pass": true,
       "console_errors_zero": true,
       "network_errors_zero": true
     }
