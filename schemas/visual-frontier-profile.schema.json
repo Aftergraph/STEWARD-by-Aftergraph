@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://aftergraph.org/schemas/steward-visual-frontier-profile-1.5.json",
-  "title": "STEWARD Visual Frontier Profile 1.5",
+  "$id": "https://aftergraph.org/schemas/steward-visual-frontier-profile-1.6.json",
+  "title": "STEWARD Visual Frontier Profile 1.6",
   "description": "Renderer/evidence profile for STEWARD presence. It is presentation-only and does not own brand identity, authority, execution truth, or verification truth.",
   "type": "object",
   "additionalProperties": false,
@@ -17,11 +17,12 @@
     "motion_runtime",
     "presence_inspector",
     "persona_roles",
+    "role_state_composition",
     "presentation_boundary"
   ],
   "properties": {
     "schema_version": {
-      "const": "steward.visual-frontier-profile/1.5"
+      "const": "steward.visual-frontier-profile/1.6"
     },
     "profile_id": {
       "type": "string",
@@ -784,6 +785,135 @@
               "const": true
             },
             "legacy_role_assets_absent": {
+              "const": true
+            },
+            "console_errors_zero": {
+              "const": true
+            },
+            "network_errors_zero": {
+              "const": true
+            }
+          }
+        }
+      }
+    },
+    "role_state_composition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "manifest_path",
+        "manifest_sha256",
+        "source_commit",
+        "role_source",
+        "state_source",
+        "role_count",
+        "state_count",
+        "combination_count",
+        "role_channel",
+        "state_channel",
+        "identity_channel",
+        "fallback",
+        "canonical_truth",
+        "authority_effect",
+        "verification_effect",
+        "qa"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "steward.role-state-composition/1.0"
+        },
+        "manifest_path": {
+          "const": "/assets/motion/role-state-composition-v1.json"
+        },
+        "manifest_sha256": {
+          "const": "629fa301a67ddb30fd047d73f0892cd3dc08f76616b49659f701fcaeb941cc2b"
+        },
+        "source_commit": {
+          "const": "4f01ab0b298b83d6a9033e68c758d0a5e24bece2"
+        },
+        "role_source": {
+          "const": "persona_roles.roles"
+        },
+        "state_source": {
+          "const": "motion_runtime.states"
+        },
+        "role_count": {
+          "const": 6
+        },
+        "state_count": {
+          "const": 12
+        },
+        "combination_count": {
+          "const": 72
+        },
+        "role_channel": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": {
+            "const": "badge_accent"
+          }
+        },
+        "state_channel": {
+          "type": "array",
+          "uniqueItems": true,
+          "minItems": 5,
+          "maxItems": 5,
+          "items": {
+            "enum": [
+              "pose",
+              "eyes",
+              "custody_node",
+              "halo_nodes",
+              "rim_signal"
+            ]
+          }
+        },
+        "identity_channel": {
+          "type": "array",
+          "uniqueItems": true,
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "enum": [
+              "core_silhouette",
+              "visor",
+              "halo_geometry",
+              "custody_ring_geometry"
+            ]
+          }
+        },
+        "fallback": {
+          "const": "state-semantic-priority"
+        },
+        "canonical_truth": {
+          "const": false
+        },
+        "authority_effect": {
+          "const": false
+        },
+        "verification_effect": {
+          "const": false
+        },
+        "qa": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "combinations_checked",
+            "all_combinations_pass",
+            "no_role_fallback_pass",
+            "console_errors_zero",
+            "network_errors_zero"
+          ],
+          "properties": {
+            "combinations_checked": {
+              "const": 72
+            },
+            "all_combinations_pass": {
+              "const": true
+            },
+            "no_role_fallback_pass": {
               "const": true
             },
             "console_errors_zero": {
