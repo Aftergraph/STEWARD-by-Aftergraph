@@ -168,6 +168,55 @@ class VisualFrontierProfileTests(unittest.TestCase):
         self.assertEqual(7, len(qa))
         self.assertTrue(all(qa.values()))
 
+    def test_persona_visual_roles_match_actor_persona_schema_exactly(self):
+        profile = self._read("fixtures/valid/visual-frontier-profile.json")
+        actor_schema = self._read("schemas/actor-persona.schema.json")
+        canonical_roles = actor_schema["properties"]["role"]["enum"]
+        visual_roles = profile["persona_roles"]["roles"]
+        self.assertEqual(canonical_roles, visual_roles)
+        self.assertEqual(6, len(visual_roles))
+
+    def test_persona_visual_roles_are_same_rig_projection_only(self):
+        profile = self._read("fixtures/valid/visual-frontier-profile.json")
+        persona = profile["persona_roles"]
+        self.assertEqual("steward.persona-role-assets/1.0", persona["schema_version"])
+        self.assertEqual("/assets/persona-roles/manifest-v1.json", persona["manifest_path"])
+        self.assertEqual(
+            "7ba7453e8c6ef610dee90aa74fc4966da83c5e425cfd9972e50c2152571bba09",
+            persona["manifest_sha256"],
+        )
+        self.assertEqual(5, persona["source_revision"])
+        self.assertEqual(
+            "b88ce626ea5f7aa70439da71600c25a9a6e24c27",
+            persona["source_commit"],
+        )
+        self.assertFalse(persona["authority_effect"])
+        self.assertFalse(persona["verification_effect"])
+        self.assertFalse(profile["presentation_boundary"]["authority_effect"])
+        self.assertFalse(profile["presentation_boundary"]["verification_effect"])
+
+    def test_persona_visual_assets_are_exactly_pinned(self):
+        persona = self._read("fixtures/valid/visual-frontier-profile.json")["persona_roles"]
+        self.assertEqual(
+            {
+                "reviewer": "control_cyan",
+                "subscriber": "system_blue",
+                "maintainer": "steward_copper",
+                "observer": "slate",
+                "auditor": "pine_teal",
+                "integrator": "decision_amber",
+            },
+            persona["accent_tokens"],
+        )
+        self.assertEqual(6, len(persona["asset_sha256"]))
+        for digest in persona["asset_sha256"].values():
+            self.assertEqual(64, len(digest))
+
+    def test_persona_visual_qa_evidence_is_complete(self):
+        qa = self._read("fixtures/valid/visual-frontier-profile.json")["persona_roles"]["qa"]
+        self.assertEqual(7, len(qa))
+        self.assertTrue(all(qa.values()))
+
 
 if __name__ == "__main__":
     unittest.main()
