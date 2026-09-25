@@ -746,29 +746,23 @@ def resume(handoff: Path) -> dict:
             if bound.get("ok") is not True or bound.get("receipt", {}).get("subject") != subject:
                 raise L7Error("L7 subject binding failed")
 
-            # execution_pdr_id is minted by the Host A approval path before the
-            # crash. It is not available in the response because the process
-            # dies, so recover it from the durable TG audit chain.
-            pdr_ids = []
-            for row in entries:
-                payload = row.get("payload")
-                if not isinstance(payload, dict):
-                    continue
-                if payload.get("actionId") != ACTION:
-                    continue
-                value = payload.get("executionPdrId") or payload.get("execution_pdr_id")
-                if isinstance(value, str) and value.startswith("pdr_"):
-                    pdr_ids.append(value)
-            pdr_ids = sorted(set(pdr_ids))
-            if len(pdr_ids) != 1:
-                # Current TG audit may not expose the execution PDR in a generic
-                # event. Resolve it from the post-reconciliation needs-approval
-                # response, which is bound by the same execution context/AIE path.
-                execution_pdr = proposed.get("execution_pdr_id")
-            else:
-                execution_pdr = pdr_ids[0]
+            # Recover the exact execution PDR from canonical WORKS durable
+            # correlation. The Host A response is intentionally unavailable.
+            pdr_status, pdr_record = base.http_json(
+                "GET",
+                works_url + "/study015/execution-policy-correlation?execution_context_id="
+                + quote(ctx_id, safe=""),
+                headers={"X-Works-Platform-Bridge": bridge_secret},
+            )
+            if pdr_status != 200 or not isinstance(pdr_record, dict):
+                raise L7Error("durable WORKS execution PDR unavailable after uncertainty crash")
+            if pdr_record.get("work_id") != identity["work_id"]:
+                raise L7Error("durable execution PDR rebound work identity")
+            if pdr_record.get("execution_context_id") != ctx_id:
+                raise L7Error("durable execution PDR rebound context identity")
+            execution_pdr = pdr_record.get("execution_pdr_id")
             if not isinstance(execution_pdr, str) or not execution_pdr.startswith("pdr_"):
-                raise L7Error("execution PDR unavailable for MissionAcceptance")
+                raise L7Error("durable WORKS execution PDR malformed")
 
             acceptance_body = {
                 "schema": "dispatch.mission-acceptance/1.0",
