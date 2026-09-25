@@ -491,7 +491,7 @@ def main() -> int:
                 raise ProofError("restart caused duplicate or divergent remote effect")
 
             audit_status, audit_body = http_json(
-                "GET", tg_url + "/v1/audit?since=0&limit=500", token=tg_operator,
+                "GET", tg_url + "/v1/audit?since=0&limit=500", token=operator_token,
             )
             if audit_status != 200 or not isinstance(audit_body, dict):
                 raise ProofError("TG audit unavailable after restart")
@@ -517,7 +517,7 @@ def main() -> int:
                 raise ProofError("persisted L5 git egress completion is not successful")
 
             verify_status, verify_body = http_json(
-                "GET", tg_url + "/v1/audit/verify", token=tg_operator,
+                "GET", tg_url + "/v1/audit/verify", token=operator_token,
             )
             if verify_status != 200 or not isinstance(verify_body, dict) or verify_body.get("ok") is not True:
                 raise ProofError("TG audit chain failed verification after restart")
