@@ -381,6 +381,9 @@ def main() -> int:
             )
             tg_fixture = wait_json(tg_ready, tg_proc)
             tg_url = tg_fixture["base_url"]
+            tg_audit_file = tg_fixture.get("audit_file")
+            if not isinstance(tg_audit_file, str) or not tg_audit_file:
+                raise ProofError("TG did not expose its durable audit file")
 
             action_body = {
                 "action_id": ACTION,
@@ -534,6 +537,8 @@ def main() -> int:
                 raise ProofError("TG restart rebound authority identity")
             if resumed_tg.get("repository") != TARGET_REPO or resumed_tg.get("ref") != TARGET_REF:
                 raise ProofError("TG restart rebound governed effect target")
+            if Path(resumed_tg.get("audit_file", "")).resolve() != Path(tg_audit_file).resolve():
+                raise ProofError("TG restart opened another audit chain")
             tg_url = resumed_tg["base_url"]
 
             if github_ref_sha(TARGET_REPO, TARGET_BRANCH, gh_env) != proof_sha_b:
@@ -816,6 +821,7 @@ def main() -> int:
                     "durable_execution_context_readback": recovered_context.get("execution_context_id") == ctx_id,
                     "same_mission_after_tg_restart": resumed_tg.get("mission_id") == MISSION,
                     "same_authority_after_tg_restart": resumed_tg.get("authority_lease_id") == AUTH,
+                    "same_tg_audit_file_after_restart": Path(resumed_tg.get("audit_file", "")).resolve() == Path(tg_audit_file).resolve(),
                     "post_restart_authority_revalidated_without_effect": reval_status == 202 and post_revalidation_egress == pre_revalidation_egress,
                     "same_remote_effect_after_restart": github_ref_sha(TARGET_REPO, TARGET_BRANCH, gh_env) == proof_sha_b,
                     "single_persisted_git_egress_completion": len(effect_completions) == 1,
