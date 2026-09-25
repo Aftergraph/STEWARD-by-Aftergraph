@@ -35,7 +35,7 @@ CAUSAL = "causal/study015/live-3"
 TARGET_REPO = "Aftergraph/runtime"
 TARGET_BRANCH = "study015/l5-durable-recovery-proof-target"
 TARGET_REF = "refs/heads/" + TARGET_BRANCH
-TARGET_PR = 206
+TARGET_PR = 209
 
 
 class ProofError(RuntimeError):
@@ -432,14 +432,16 @@ def main() -> int:
             # L5 durability boundary: crash both real process carriers AFTER the
             # governed effect is externally visible but BEFORE independent
             # verification / subject binding / MissionAcceptance.
-            tg_proc.terminate()
+            # Simulate an abrupt carrier failure. SIGKILL prevents either
+            # process from performing application-level graceful shutdown work.
+            tg_proc.kill()
             tg_proc.wait(timeout=5)
             tg_proc = None
-            works_proc.terminate()
+            works_proc.kill()
             works_proc.wait(timeout=5)
 
             if github_ref_sha(TARGET_REPO, TARGET_BRANCH, gh_env) != proof_sha_b:
-                raise ProofError("remote effect changed during process shutdown")
+                raise ProofError("remote effect changed during process crash")
 
             works_resume_ready = root / "works-resume-ready.json"
             if works_resume_ready.exists():
@@ -448,8 +450,7 @@ def main() -> int:
                 [
                     str(works_bin), "--addr", "127.0.0.1:0",
                     "--db", str(works_db), "--fixture-out", str(works_resume_ready),
-                    "--resume-work-id", work_id,
-                    "--resume-worker-lease-id", lease_id,
+                    "--resume-fixture", str(works_ready),
                 ],
                 cwd=works_root,
                 env=child_env,
@@ -457,6 +458,8 @@ def main() -> int:
                 stderr=subprocess.DEVNULL,
             )
             resumed_works = wait_json(works_resume_ready, works_proc)
+            if resumed_works.get("recovered") is not True:
+                raise ProofError("WORKS restart did not enter durable recovery mode")
             if resumed_works.get("work_id") != work_id:
                 raise ProofError("WORKS restart rebound work identity")
             if resumed_works.get("worker_lease_id") != lease_id:
@@ -465,6 +468,52 @@ def main() -> int:
                 raise ProofError("WORKS restart opened another durable database")
             works_url = resumed_works["base_url"]
             runtime_env["WORKS_BASE_URL"] = works_url
+
+            # Replay the exact same Runtime dispatch after restart. WORKS must
+            # return the durable acceptance winner rather than minting a new
+            # execution/context/trace identity.
+            replayed = json.loads(run(
+                ["node", str(runtime_dispatch)],
+                env=runtime_env,
+                input_text=json.dumps(dispatch_request),
+            ).stdout)
+            if replayed.get("ok") is not True:
+                raise ProofError("Runtime dispatch replay failed after WORKS restart")
+            replay_receipt = replayed["receipt"]
+            for field in (
+                "runtimeDispatchId",
+                "worksExecutionId",
+                "workId",
+                "executionContextId",
+                "traceId",
+                "workerId",
+            ):
+                if replay_receipt.get(field) != runtime_receipt.get(field):
+                    raise ProofError(f"durable dispatch replay rebound {field}")
+
+            # Independently resolve the execution context from durable WORKS
+            # state; this cannot be satisfied from orchestrator memory.
+            ctx_status, recovered_context = http_json(
+                "GET",
+                works_url + "/v1/execution-contexts/" + quote(ctx_id, safe=""),
+            )
+            if ctx_status != 200:
+                raise ProofError("durable execution context unavailable after restart")
+            expected_context = {
+                "execution_context_id": ctx_id,
+                "organization_id": ORG,
+                "tenant_id": TENANT,
+                "principal_id": PRINCIPAL,
+                "mission_id": MISSION,
+                "authority_lease_id": AUTH,
+                "work_id": work_id,
+                "worker_lease_id": lease_id,
+                "admission_decision_id": ADMISSION,
+                "trace_id": runtime_receipt["traceId"],
+            }
+            for key, value in expected_context.items():
+                if recovered_context.get(key) != value:
+                    raise ProofError(f"durable execution context rebound {key}")
 
             tg_resume_ready = root / "tg-resume-ready.json"
             if tg_resume_ready.exists():
@@ -521,6 +570,35 @@ def main() -> int:
             )
             if verify_status != 200 or not isinstance(verify_body, dict) or verify_body.get("ok") is not True:
                 raise ProofError("TG audit chain failed verification after restart")
+
+            # Re-enter the same TG action after restart. The V2.1 authorization
+            # path must re-read WORKS context and revalidate AIE authority, but
+            # we deliberately do NOT approve this second destructive request:
+            # no duplicate remote effect may occur.
+            pre_revalidation_egress = len(effect_completions)
+            reval_status, reval_proposed = http_json(
+                "POST", tg_url + "/v1/actions",
+                token=worker_token, body=action_body,
+            )
+            if reval_status != 202 or reval_proposed.get("decision") != "needs_approval":
+                raise ProofError("post-restart TG/AIE revalidation did not reach approval boundary")
+            if github_ref_sha(TARGET_REPO, TARGET_BRANCH, gh_env) != proof_sha_b:
+                raise ProofError("post-restart revalidation changed remote effect")
+            _, reval_audit = http_json(
+                "GET", tg_url + "/v1/audit?since=0&limit=500", token=operator_token,
+            )
+            reval_entries = reval_audit.get("entries", []) if isinstance(reval_audit, dict) else []
+            post_revalidation_egress = sum(
+                1 for entry in reval_entries
+                if isinstance(entry, dict)
+                and isinstance(entry.get("payload"), dict)
+                and entry["payload"].get("type") == "git_egress_completed"
+                and entry["payload"].get("actionId") == ACTION
+                and entry["payload"].get("effectId") == EFFECT
+                and entry["payload"].get("executionContextId") == ctx_id
+            )
+            if post_revalidation_egress != pre_revalidation_egress:
+                raise ProofError("post-restart authority revalidation duplicated Git effect")
 
             sentinel = sentinel_review(sentinel_root, gh_env)
             if sentinel.get("review", {}).get("headSha") != proof_sha_b:
@@ -581,6 +659,28 @@ def main() -> int:
             ):
                 raise ProofError("WORKS MissionAcceptance did not commit Verified Outcome")
 
+            # A retry of the exact acceptance after recovery must be idempotent.
+            retry_status, accepted_retry = http_json(
+                "POST", accept_url,
+                token=works_token,
+                body=acceptance_body,
+                headers={
+                    "X-Works-Platform-Bridge": bridge_secret,
+                    "X-WORKS-Verifier-Token": verifier_token,
+                },
+            )
+            if retry_status != 200:
+                raise ProofError("MissionAcceptance retry was not idempotent")
+            for key in (
+                "verified",
+                "outcome",
+                "execution_context_id",
+                "execution_pdr_id",
+                "verification_subject",
+            ):
+                if accepted_retry.get(key) != accepted.get(key):
+                    raise ProofError(f"MissionAcceptance retry rebound {key}")
+
             # Hostile owner-level acceptance checks.
             wrong = dict(acceptance_body)
             wrong["execution_pdr_id"] = "pdr_" + "9" * 32
@@ -603,7 +703,7 @@ def main() -> int:
             if wrong_status != 409 or stale_status != 409:
                 raise ProofError("MissionAcceptance hostile seam did not fail closed")
 
-            prior_l4_context = "ctx_702c5632e8329dff16124ffe514b1367"
+            prior_l4_context = "ctx_243e1bc1627b3ce8167df39c791e3f6e"
             old_identity = dict(acceptance_body)
             old_identity["execution_context_id"] = prior_l4_context
             old_identity_status, _ = http_json(
@@ -702,22 +802,35 @@ def main() -> int:
                     "revoked_authority_rejected_before_egress": True,
                 },
                 "durability": {
-                    "prior_l4_causal_slice_sha256": "31d734b5a958f13a4a9db8306f8fefa4e147dc26a066d78df4fea1ed0fd28e96",
-                    "prior_l4_execution_context_id": "ctx_702c5632e8329dff16124ffe514b1367",
-                    "works_process_restarted": True,
-                    "trust_gateway_process_restarted": True,
+                    "prior_l4_causal_slice_sha256": "3ae010a18e036d7978b06f85c783b21be724776ce9c2947fee93813d17d47e4c",
+                    "prior_l4_execution_context_id": "ctx_243e1bc1627b3ce8167df39c791e3f6e",
+                    "works_process_restarted_after_sigkill": resumed_works.get("recovered") is True,
+                    "trust_gateway_process_restarted_after_sigkill": True,
                     "same_work_id_after_restart": resumed_works.get("work_id") == work_id,
                     "same_worker_lease_after_restart": resumed_works.get("worker_lease_id") == lease_id,
                     "same_works_db_after_restart": Path(resumed_works.get("db_path", "")).resolve() == works_db.resolve(),
+                    "same_runtime_dispatch_after_restart": replay_receipt.get("runtimeDispatchId") == runtime_receipt.get("runtimeDispatchId"),
+                    "same_works_execution_after_restart": replay_receipt.get("worksExecutionId") == works_execution_id,
+                    "same_execution_context_after_restart": replay_receipt.get("executionContextId") == ctx_id,
+                    "same_trace_after_restart": replay_receipt.get("traceId") == runtime_receipt.get("traceId"),
+                    "durable_execution_context_readback": recovered_context.get("execution_context_id") == ctx_id,
                     "same_mission_after_tg_restart": resumed_tg.get("mission_id") == MISSION,
                     "same_authority_after_tg_restart": resumed_tg.get("authority_lease_id") == AUTH,
+                    "post_restart_authority_revalidated_without_effect": reval_status == 202 and post_revalidation_egress == pre_revalidation_egress,
                     "same_remote_effect_after_restart": github_ref_sha(TARGET_REPO, TARGET_BRANCH, gh_env) == proof_sha_b,
                     "single_persisted_git_egress_completion": len(effect_completions) == 1,
                     "tg_audit_chain_verified_after_restart": verify_body.get("ok") is True,
-                    "fresh_exact_subject": subject != "git:Aftergraph/runtime@7dc0a336e06e7528f471bbd5676ddb50df6e9046",
-                    "fresh_execution_context": ctx_id != "ctx_702c5632e8329dff16124ffe514b1367",
+                    "mission_acceptance_retry_idempotent": retry_status == 200 and accepted_retry == accepted,
+                    "fresh_exact_subject": subject != "git:Aftergraph/runtime@92cc08482d91d70140db4916f1a11fc43b6318f6",
+                    "fresh_execution_context": ctx_id != "ctx_243e1bc1627b3ce8167df39c791e3f6e",
                 },
             }
+            if not all(
+                type(value) is bool and value is True
+                for key, value in receipt["durability"].items()
+                if not key.startswith("prior_l4_")
+            ):
+                raise ProofError("L5 durable recovery invariant failed")
             canonical = json.dumps(receipt, sort_keys=True, separators=(",", ":"))
             receipt["causal_slice_sha256"] = hashlib.sha256(canonical.encode()).hexdigest()
             print(json.dumps(receipt, sort_keys=True))
