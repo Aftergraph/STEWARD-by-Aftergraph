@@ -2,7 +2,7 @@
 """STUDY-015 LIVE_CAUSAL_SLICE / L4 independent repeatability.
 
 This is a repeatability/conformance proof, not a performance experiment.
-G15-9 remains unapproved. The script composes real process boundaries:
+G15-9 remains unapproved. The script repeats the verified L3 process composition with fresh causal identities and a fresh exact proof subject:
 WORKS HTTP -> Runtime CLI -> TG HTTP -> AIE bridge subprocess -> governed
 GitHub effect -> exact remote readback -> Sentinel CLI -> Runtime subject
 binding -> durable WORKS MissionAcceptance.
@@ -608,17 +608,23 @@ def main() -> int:
                     "prior_l3_execution_context_rejected": True,
                     "revoked_authority_rejected_before_egress": True,
                 },
+                "prior_l3": {
+                    "causal_slice_sha256": "39a4e862030476ad4585fd70038056c8ad3e2b719e645ca64b86a477cdfb230d",
+                    "execution_context_id": "ctx_c25bcc01cd7b21ed26826f1666847208",
+                    "exact_subject": "git:Aftergraph/runtime@9c781f624bae36ee35aa23df57060e934d3a634c",
+                },
                 "repeatability": {
-                    "prior_l3_causal_slice_sha256": "39a4e862030476ad4585fd70038056c8ad3e2b719e645ca64b86a477cdfb230d",
-                    "prior_l3_execution_context_id": "ctx_c25bcc01cd7b21ed26826f1666847208",
                     "fresh_exact_subject": subject != "git:Aftergraph/runtime@9c781f624bae36ee35aa23df57060e934d3a634c",
                     "fresh_execution_context": ctx_id != "ctx_c25bcc01cd7b21ed26826f1666847208",
                     "fresh_mission_id": MISSION != "mis_study015_live_causal",
                     "fresh_action_id": ACTION != "act_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                     "fresh_effect_id": EFFECT != "effect/study015/live-1",
                     "fresh_causal_id": CAUSAL != "causal/study015/live-1",
+                    "prior_l3_execution_context_rejected": old_identity_status == 409,
                 },
             }
+            if not all(receipt["repeatability"].values()):
+                raise ProofError("L4 repeatability identity isolation failed")
             canonical = json.dumps(receipt, sort_keys=True, separators=(",", ":"))
             receipt["causal_slice_sha256"] = hashlib.sha256(canonical.encode()).hexdigest()
             print(json.dumps(receipt, sort_keys=True))
