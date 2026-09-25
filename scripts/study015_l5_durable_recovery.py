@@ -490,6 +490,38 @@ def main() -> int:
             if github_ref_sha(TARGET_REPO, TARGET_BRANCH, gh_env) != proof_sha_b:
                 raise ProofError("restart caused duplicate or divergent remote effect")
 
+            audit_status, audit_body = http_json(
+                "GET", tg_url + "/v1/audit?since=0&limit=500", token=tg_operator,
+            )
+            if audit_status != 200 or not isinstance(audit_body, dict):
+                raise ProofError("TG audit unavailable after restart")
+            audit_entries = audit_body.get("entries")
+            if not isinstance(audit_entries, list):
+                raise ProofError("TG audit response missing entries")
+            effect_completions = [
+                entry for entry in audit_entries
+                if isinstance(entry, dict)
+                and isinstance(entry.get("payload"), dict)
+                and entry["payload"].get("type") == "git_egress_completed"
+                and entry["payload"].get("actionId") == ACTION
+                and entry["payload"].get("effectId") == EFFECT
+                and entry["payload"].get("executionContextId") == ctx_id
+            ]
+            if len(effect_completions) != 1:
+                raise ProofError(
+                    f"expected exactly one persisted L5 git_egress_completed entry, got {len(effect_completions)}"
+                )
+            if int(effect_completions[0]["payload"].get("status") or 0) < 200 or int(
+                effect_completions[0]["payload"].get("status") or 0
+            ) >= 300:
+                raise ProofError("persisted L5 git egress completion is not successful")
+
+            verify_status, verify_body = http_json(
+                "GET", tg_url + "/v1/audit/verify", token=tg_operator,
+            )
+            if verify_status != 200 or not isinstance(verify_body, dict) or verify_body.get("ok") is not True:
+                raise ProofError("TG audit chain failed verification after restart")
+
             sentinel = sentinel_review(sentinel_root, gh_env)
             if sentinel.get("review", {}).get("headSha") != proof_sha_b:
                 raise ProofError("Sentinel reviewed another head")
@@ -680,6 +712,8 @@ def main() -> int:
                     "same_mission_after_tg_restart": resumed_tg.get("mission_id") == MISSION,
                     "same_authority_after_tg_restart": resumed_tg.get("authority_lease_id") == AUTH,
                     "same_remote_effect_after_restart": github_ref_sha(TARGET_REPO, TARGET_BRANCH, gh_env) == proof_sha_b,
+                    "single_persisted_git_egress_completion": len(effect_completions) == 1,
+                    "tg_audit_chain_verified_after_restart": verify_body.get("ok") is True,
                     "fresh_exact_subject": subject != "git:Aftergraph/runtime@7dc0a336e06e7528f471bbd5676ddb50df6e9046",
                     "fresh_execution_context": ctx_id != "ctx_702c5632e8329dff16124ffe514b1367",
                 },
