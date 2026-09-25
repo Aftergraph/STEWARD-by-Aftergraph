@@ -168,6 +168,22 @@ class GoldenMissionTests(unittest.TestCase):
         self.assertEqual(f"git:Aftergraph/STEWARD-by-Aftergraph@{CANDIDATE}", outcome.subject_binding.subject)
         self.assertEqual(1, len(subject.calls))
 
+
+    def test_rebound_admission_decision_fails_closed(self):
+        coordinator, _, _ = self.coordinator()
+        tg = {
+            "decision": "allow",
+            "execution_context_id": CTX,
+            "execution_pdr_id": "pdr_" + "e" * 32,
+            "admission_decision_id": "pdr_" + "f" * 32,
+            "result": {"effect": "applied"},
+        }
+        with patch("steward.ports.trust_gateway.urlopen", return_value=response(tg)):
+            with self.assertRaisesRegex(
+                RuntimeError, "rebound admission_decision_id"
+            ):
+                coordinator.execute(request())
+
     def test_approval_stops_before_effect_subject_and_sentinel(self):
         coordinator, git, subject = self.coordinator()
         tg = {"decision": "needs_approval", "approvalId": "approval/1"}

@@ -107,6 +107,11 @@ class GoldenMissionCoordinator:
                 reason=action.reason,
             )
 
+        if action.admission_decision_id != request.dispatch.admission_decision_id:
+            raise GoldenMissionContractError(
+                "Trust Gateway rebound admission_decision_id"
+            )
+
         candidate = self._git_subject.capture(worktree)
         if candidate.work_id != runtime.work_id:
             raise GoldenMissionContractError("candidate rebound to another Work")
