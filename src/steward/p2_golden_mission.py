@@ -18,6 +18,11 @@ from .ports.runtime_subject import (
     RuntimeSubjectBindingRequest,
 )
 from .ports.sentinel import SentinelPort, SentinelVerificationProjection, SentinelVerificationRequest
+from .ports.mission_acceptance import (
+    MissionAcceptancePort,
+    MissionAcceptanceProjection,
+    MissionAcceptanceRequest,
+)
 from .ports.trust_gateway import (
     TrustGatewayActionReceipt,
     TrustGatewayActionRequest,
@@ -56,6 +61,7 @@ class GoldenMissionOutcome:
     candidate: GitCandidateSubject
     subject_binding: RuntimeSubjectBindingReceipt
     verification: SentinelVerificationProjection
+    mission_acceptance: MissionAcceptanceProjection | None
     accepted: bool
 
 
@@ -69,12 +75,14 @@ class GoldenMissionCoordinator:
         git_subject: GitSubjectPort,
         subject_binding: RuntimeSubjectBindingPort,
         sentinel: SentinelPort,
+        mission_acceptance: MissionAcceptancePort,
     ) -> None:
         self._runtime = runtime
         self._trust_gateway = trust_gateway
         self._git_subject = git_subject
         self._subject_binding = subject_binding
         self._sentinel = sentinel
+        self._mission_acceptance = mission_acceptance
 
     def execute(
         self, request: GoldenMissionRequest
@@ -132,12 +140,31 @@ class GoldenMissionCoordinator:
                 pull_request=request.pull_request,
             )
         )
-        accepted = verification.satisfies(candidate.candidate_sha)
+        if not verification.satisfies(candidate.candidate_sha):
+            return GoldenMissionOutcome(
+                runtime=runtime,
+                action=action,
+                candidate=candidate,
+                subject_binding=binding,
+                verification=verification,
+                mission_acceptance=None,
+                accepted=False,
+            )
+
+        acceptance = self._mission_acceptance.project(
+            MissionAcceptanceRequest(
+                mission_id=request.dispatch.mission_id,
+                work_id=runtime.work_id,
+                execution_context_id=runtime.execution_context_id,
+                execution_policy_decision_id=action.execution_pdr_id,
+            )
+        )
         return GoldenMissionOutcome(
             runtime=runtime,
             action=action,
             candidate=candidate,
             subject_binding=binding,
             verification=verification,
-            accepted=accepted,
+            mission_acceptance=acceptance,
+            accepted=acceptance.accepted,
         )
