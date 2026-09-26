@@ -14,6 +14,7 @@ from steward.ports import (
     RuntimeV2Port,
     SentinelPort,
     TrustGatewayClient,
+    MissionAcceptancePort,
 )
 
 
@@ -77,6 +78,27 @@ class GitTransport:
             "branchRef": "steward/p2-proof",
         }
 
+
+
+class WorksEvidenceTransport:
+    def __init__(self, status="verified", outcome="passed"):
+        self.status=status
+        self.outcome=outcome
+    def get_evidence(self, work_id):
+        return {
+            "bundle_id":"evb_"+"a"*32,
+            "work_id":work_id,
+            "identity_chain":{
+                "mission_id":"mis_p2_golden",
+                "work_id":work_id,
+                "execution_context_id":CTX,
+                "execution_policy_decision_id":"pdr_"+"e"*32,
+            },
+            "platform_outcome_verification":{
+                "status":self.status,
+                "outcome_status":self.outcome,
+            },
+        }
 
 class SentinelTransport:
     def __init__(self, verdict="SHIP", head=CANDIDATE):
@@ -148,6 +170,7 @@ class GoldenMissionTests(unittest.TestCase):
                 GitSubjectPort(git),
                 RuntimeSubjectBindingPort(subject),
                 SentinelPort(sentinel or SentinelTransport()),
+                MissionAcceptancePort(WorksEvidenceTransport()),
             ),
             git,
             subject,
@@ -165,6 +188,8 @@ class GoldenMissionTests(unittest.TestCase):
         with patch("steward.ports.trust_gateway.urlopen", return_value=response(tg)):
             outcome = coordinator.execute(request())
         self.assertTrue(outcome.accepted)
+        self.assertIsNotNone(outcome.mission_acceptance)
+        self.assertEqual("verified", outcome.mission_acceptance.status)
         self.assertEqual(f"git:Aftergraph/STEWARD-by-Aftergraph@{CANDIDATE}", outcome.subject_binding.subject)
         self.assertEqual(1, len(subject.calls))
 

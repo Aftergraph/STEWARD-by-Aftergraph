@@ -340,6 +340,12 @@ class WorksClient:
     def get_work(self, work_id: str) -> Mapping[str, Any]:
         return self._json("GET", f"/v1/works/{work_id}")
 
+    def get_evidence(self, work_id: str) -> Mapping[str, Any]:
+        payload = self._json("GET", f"/v1/works/{work_id}/evidence")
+        if not isinstance(payload, Mapping):
+            raise WorksContractError("WORKS evidence response must be a JSON object")
+        return payload
+
     def list_events(self, work_id: str, *, after: int = 0, limit: int = 100) -> Any:
         if after < 0 or limit <= 0:
             raise ValueError("after must be >= 0 and limit must be > 0")
